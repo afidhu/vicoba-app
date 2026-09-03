@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GroupRole {
+  OWNER
+  ADMIN
+  TREASURER
+  SECRETARY
+  MEMBER
+}
+
+enum FineStatus {
+  UNPAID
+  PAID
+  WAIVED
+}
+
+enum LoanStatus {
+  PENDING
+  REJECTED
+  ACTIVE
+  PAID
+  OVERDUE
+  DEFAULTED
+}
+
+enum TransactionType {
+  CONTRIBUTION
+  SHARE_PURCHASE
+  FINE
+  LOAN_DISBURSEMENT
+  LOAN_REPAYMENT
+  EXPENSE
+}
+
+enum TransactionDirection {
+  IN
+  OUT
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships    GroupMember[]
+  ownedGroups    Group[]       @relation("GroupOwner")
+  auditLogs      AuditLog[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model Group {
+  id                 String   @id @default(uuid())
+  name               String
+  location           String?
+  meetingDay         String?
+  weeklyContribution Decimal  @default(0) @db.Decimal(14, 2)
+  sharePrice         Decimal  @default(10000) @db.Decimal(14, 2)
+  fineDefaultAmount  Decimal  @default(0) @db.Decimal(14, 2)
+  loanInterestRate   Decimal  @default(0) @db.Decimal(5, 2)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  ownerId String
+  owner   User   @relation("GroupOwner", fields: [ownerId], references: [id])
+
+  members       GroupMember[]
+  contributions Contribution[]
+  fines         Fine[]
+  loans         Loan[]
+  expenses      Expense[]
+  meetings      Meeting[]
+  transactions  Transaction[]
+  auditLogs     AuditLog[]
+}
+
+model GroupMember {
+  id            String   @id @default(uuid())
+  groupId       String
+  group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  name          String
+  phone         String?
+  role          GroupRole @default(MEMBER)
+  shareHoldings Int      @default(0)
+  isActive      Boolean  @default(true)
+  joinedAt      DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  contributions Contribution[]
+  fines         Fine[]
+  loans         Loan[]
+  transactions  Transaction[]
+  attendances   MeetingAttendance[]
+
+  @@unique([groupId, phone])
+}
+
+model Contribution {
+  id         String   @id @default(uuid())
+  groupId    String
+  group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  memberId   String
+  member     GroupMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  amount     Decimal  @db.Decimal(14, 2)
+  weekEnding DateTime
+  createdAt  DateTime @default(now())
+}
+
+model Fine {
+  id        String     @id @default(uuid())
+  groupId   String
+  group     Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    GroupMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  reason    String
+  amount    Decimal    @db.Decimal(14, 2)
+  status    FineStatus @default(UNPAID)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Loan {
+  id           String     @id @default(uuid())
+  groupId      String
+  group        Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  memberId     String
+  member       GroupMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  principal    Decimal    @db.Decimal(14, 2)
+  interestRate Decimal    @db.Decimal(5, 2)
+  issueDate    DateTime?
+  dueDate      DateTime?
+  status       LoanStatus @default(ACTIVE)
+  requestedById String?
+  decidedById   String?
+  decidedAt     DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  repayments LoanRepayment[]
+}
+
+model LoanRepayment {
+  id        String   @id @default(uuid())
+  loanId    String
+  loan      Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(14, 2)
+  paidAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  groupId     String
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  description String
+  amount      Decimal  @db.Decimal(14, 2)
+  date        DateTime
+  createdAt   DateTime @default(now())
+}
+
+model Meeting {
+  id        String   @id @default(uuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  title     String?
+  location  String?
+  date      DateTime
+  notes     String?
+  createdAt DateTime @default(now())
+
+  attendances MeetingAttendance[]
+}
+
+model MeetingAttendance {
+  id        String   @id @default(uuid())
+  meetingId String
+  meeting   Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    GroupMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  present   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([meetingId, memberId])
+}
+
+model Transaction {
+  id          String               @id @default(uuid())
+  groupId     String
+  group       Group                @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  memberId    String?
+  member      GroupMember?         @relation(fields: [memberId], references: [id])
+  type        TransactionType
+  direction   TransactionDirection
+  amount      Decimal              @db.Decimal(14, 2)
+  description String?
+  refId       String?
+  createdAt   DateTime             @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  groupId   String?
+  group     Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,52 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub/
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+mobile/.packages
+mobile/.pub/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+
+# Node
+node_modules/
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.dbbuild/
+
+# Flutter
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android
+android/.gradle/
+android/app/build/
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Environment
+.env
