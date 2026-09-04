@@ -32,7 +32,7 @@ export const groupsApi = {
 // ---- Members ----
 export const membersApi = {
   list: (groupId: string) => apiClient.get<GroupMember[]>(`/groups/${groupId}/members`),
-  create: (groupId: string, data: Partial<GroupMember>) =>
+  create: (groupId: string, data: Partial<GroupMember> & { email?: string; password?: string }) =>
     apiClient.post<GroupMember>(`/groups/${groupId}/members`, data),
   update: (groupId: string, memberId: string, data: Partial<GroupMember>) =>
     apiClient.patch<GroupMember>(`/groups/${groupId}/members/${memberId}`, data),

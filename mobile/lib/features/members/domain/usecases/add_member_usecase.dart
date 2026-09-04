@@ -14,6 +14,8 @@ class AddMemberUseCase {
     String? phone,
     String? role,
     String? userId,
+    String? email,
+    String? password,
   }) {
     return repository.addMember(
       groupId: groupId,
@@ -21,6 +23,8 @@ class AddMemberUseCase {
       phone: phone,
       role: role,
       userId: userId,
+      email: email,
+      password: password,
     );
   }
 }

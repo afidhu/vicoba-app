@@ -15,6 +15,8 @@ export default function Members() {
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', phone: '', role: 'MEMBER' as GroupRole });
+  const [createLogin, setCreateLogin] = useState(false);
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
 
   function load() {
     if (!activeGroup) return;
@@ -32,8 +34,13 @@ export default function Members() {
     if (!activeGroup) return;
     setError('');
     try {
-      await membersApi.create(activeGroup.id, form);
+      await membersApi.create(activeGroup.id, {
+        ...form,
+        ...(createLogin ? loginForm : {}),
+      });
       setForm({ name: '', phone: '', role: 'MEMBER' });
+      setLoginForm({ email: '', password: '' });
+      setCreateLogin(false);
       setShowForm(false);
       load();
     } catch (err) {
@@ -105,6 +112,46 @@ export default function Members() {
                   Save
                 </button>
               </div>
+              <div className="col-12">
+                <div className="form-check">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="createLogin"
+                    checked={createLogin}
+                    onChange={(e) => setCreateLogin(e.target.checked)}
+                  />
+                  <label className="form-check-label" htmlFor="createLogin">
+                    Create a login for this member (lets them sign in to the app)
+                  </label>
+                </div>
+              </div>
+              {createLogin && (
+                <>
+                  <div className="col-md-4">
+                    <label className="form-label">Email address</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      required={createLogin}
+                      value={loginForm.email}
+                      onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Password</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      required={createLogin}
+                      minLength={6}
+                      placeholder="At least 6 characters"
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
             </form>
           </div>
         </div>

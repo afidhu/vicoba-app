@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 // import { LoanStatus, TransactionDirection, TransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { assertOwnRecordOrPrivileged } from '../common/utils/member-scope';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { RepayLoanDto } from './dto/repay-loan.dto';
 import { RequestLoanDto } from './dto/request-loan.dto';
@@ -230,12 +231,13 @@ export class LoansService {
     return loans.map((loan) => this.decorateLoan(loan));
   }
 
-  async findOne(groupId: string, loanId: string) {
+  async findOne(groupId: string, loanId: string, membership?: { id: string; role: string }) {
     const loan = await this.prisma.loan.findFirst({
       where: { id: loanId, groupId },
       include: { member: { select: { id: true, name: true } }, repayments: true },
     });
     if (!loan) throw new NotFoundException('Loan not found');
+    if (membership) assertOwnRecordOrPrivileged(membership, loan.memberId);
     return this.decorateLoan(loan);
   }
 

@@ -37,6 +37,8 @@ class MembersRepositoryImpl implements MembersRepository {
     String? phone,
     String? role,
     String? userId,
+    String? email,
+    String? password,
   }) async {
     try {
       final data = {
@@ -44,6 +46,8 @@ class MembersRepositoryImpl implements MembersRepository {
         if (phone != null && phone.isNotEmpty) 'phone': phone,
         if (role != null) 'role': role,
         if (userId != null && userId.isNotEmpty) 'userId': userId,
+        if (email != null && email.isNotEmpty) 'email': email,
+        if (password != null && password.isNotEmpty) 'password': password,
       };
       final result = await remoteDataSource.addMember(groupId, data);
       return Right(result);

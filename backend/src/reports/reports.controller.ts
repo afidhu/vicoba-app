@@ -1,9 +1,11 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ReportsService } from './reports.service';
+import { Roles } from '../common/decorators/roles.decorator';
 import { GroupRolesGuard } from '../common/guards/group-roles.guard';
 
 @Controller('groups/:groupId/reports')
 @UseGuards(GroupRolesGuard)
+@Roles('ADMIN', 'TREASURER', 'SECRETARY')
 export class ReportsController {
   constructor(private reportsService: ReportsService) {}
 

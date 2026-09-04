@@ -11,6 +11,8 @@ abstract class MembersRepository {
     String? phone,
     String? role,
     String? userId,
+    String? email,
+    String? password,
   });
   Future<Either<Failure, Member>> updateMember({
     required String groupId,

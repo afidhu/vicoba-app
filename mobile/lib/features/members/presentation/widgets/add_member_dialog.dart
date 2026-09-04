@@ -28,12 +28,18 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   String _selectedRole = AppConstants.roleMember;
+  bool _createLogin = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -45,6 +51,8 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
           name: _nameController.text.trim(),
           phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
           role: _selectedRole,
+          email: _createLogin ? _emailController.text.trim() : null,
+          password: _createLogin ? _passwordController.text : null,
         ),
       );
       Navigator.of(context).pop();
@@ -101,6 +109,44 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
                   }
                 },
               ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Create a login for this member', style: AppTextStyles.bodyMedium),
+                subtitle: const Text(
+                  'Lets them sign in to the app with an email and password.',
+                  style: AppTextStyles.caption,
+                ),
+                value: _createLogin,
+                onChanged: (val) => setState(() => _createLogin = val),
+              ),
+              if (_createLogin) ...[
+                const SizedBox(height: 8),
+                AppTextField(
+                  controller: _emailController,
+                  labelText: 'Email Address *',
+                  hintText: 'member@example.com',
+                  prefixIcon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (val) => _createLogin ? Validators.email(val) : null,
+                ),
+                const SizedBox(height: 14),
+                AppTextField(
+                  controller: _passwordController,
+                  labelText: 'Password *',
+                  hintText: 'At least 6 characters',
+                  prefixIcon: Icons.lock_outline_rounded,
+                  obscureText: _obscurePassword,
+                  validator: (val) => _createLogin ? Validators.password(val, 6) : null,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      size: 20,
+                    ),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

@@ -59,6 +59,8 @@ class MembersBloc extends Bloc<MembersEvent, MembersState> {
       phone: event.phone,
       role: event.role,
       userId: event.userId,
+      email: event.email,
+      password: event.password,
     );
     result.fold(
       (failure) => emit(MembersError(failure.message)),

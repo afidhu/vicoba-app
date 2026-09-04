@@ -12,8 +12,10 @@ import { FinesService } from './fines.service';
 import { CreateFineDto } from './dto/create-fine.dto';
 import { UpdateFineStatusDto } from './dto/update-fine-status.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { GroupMembership } from '../common/decorators/group-membership.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { GroupRolesGuard } from '../common/guards/group-roles.guard';
+import { scopeMemberId } from '../common/utils/member-scope';
 
 @Controller('groups/:groupId/fines')
 @UseGuards(GroupRolesGuard)
@@ -33,10 +35,11 @@ export class FinesController {
   @Get()
   findAll(
     @Param('groupId') groupId: string,
-    @Query('memberId') memberId?: string,
-    @Query('status') status?: string,
+    @Query('memberId') memberId: string | undefined,
+    @Query('status') status: string | undefined,
+    @GroupMembership() membership: { id: string; role: string },
   ) {
-    return this.finesService.findAll(groupId, memberId, status);
+    return this.finesService.findAll(groupId, scopeMemberId(membership, memberId), status);
   }
 
   @Patch(':fineId/status')

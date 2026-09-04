@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 // import { TransactionDirection, TransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
@@ -28,13 +29,35 @@ export class MembersService {
       }
     }
 
+    let userId = dto.userId;
+
+    // Owner/officer is registering this member with their own login.
+    if (!userId && dto.email && dto.password) {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+      });
+      if (existingUser) {
+        throw new ConflictException('An account with this email already exists');
+      }
+      const passwordHash = await bcrypt.hash(dto.password, 10);
+      const newUser = await this.prisma.user.create({
+        data: {
+          email: dto.email,
+          passwordHash,
+          name: dto.name,
+          phone: dto.phone,
+        },
+      });
+      userId = newUser.id;
+    }
+
     const member = await this.prisma.groupMember.create({
       data: {
         groupId,
         name: dto.name,
         phone: dto.phone,
         role: dto.role as any,
-        userId: dto.userId,
+        userId,
       },
     });
 
@@ -49,9 +72,9 @@ export class MembersService {
     return member;
   }
 
-  findAll(groupId: string) {
+  findAll(groupId: string, memberId?: string) {
     return this.prisma.groupMember.findMany({
-      where: { groupId },
+      where: { groupId, ...(memberId ? { id: memberId } : {}) },
       orderBy: { joinedAt: 'asc' },
     });
   }
@@ -134,7 +157,7 @@ export class MembersService {
     return { member: updatedMember, transaction };
   }
 
-  async shareSummary(groupId: string) {
+  async shareSummary(groupId: string, memberId?: string) {
     const [group, members] = await Promise.all([
       this.prisma.group.findUnique({ where: { id: groupId } }),
       this.prisma.groupMember.findMany({ where: { groupId } }),
@@ -142,15 +165,18 @@ export class MembersService {
     if (!group) throw new NotFoundException('Group not found');
 
     const sharePrice = Number(group.sharePrice);
-    const breakdown = members.map((m) => ({
+    const toRow = (m: (typeof members)[number]) => ({
       memberId: m.id,
       name: m.name,
       shareHoldings: m.shareHoldings,
       shareValue: m.shareHoldings * sharePrice,
-    }));
+    });
 
-    const totalShares = breakdown.reduce((sum, m) => sum + m.shareHoldings, 0);
+    // Group totals always reflect every member; the breakdown rows are what a
+    // plain MEMBER doesn't get to see beyond their own.
+    const totalShares = members.reduce((sum, m) => sum + m.shareHoldings, 0);
     const totalShareCapital = totalShares * sharePrice;
+    const breakdown = (memberId ? members.filter((m) => m.id === memberId) : members).map(toRow);
 
     return { sharePrice, totalShares, totalShareCapital, breakdown };
   }

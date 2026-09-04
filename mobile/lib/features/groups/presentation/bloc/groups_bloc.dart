@@ -34,8 +34,8 @@ class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
   ) async {
     emit(GroupsLoading());
     final result = await getGroupsUseCase();
-    result.fold(
-      (failure) => emit(GroupsError(failure.message)),
+    await result.fold(
+      (failure) async => emit(GroupsError(failure.message)),
       (groups) async {
         _cachedGroups = groups;
         final savedGroupId = await storageService.getActiveGroupId();
@@ -49,6 +49,8 @@ class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
           _activeGroup = groups.first;
           await storageService.saveActiveGroupId(_activeGroup!.id);
           await storageService.saveActiveGroupName(_activeGroup!.name);
+        } else {
+          _activeGroup = null;
         }
         emit(GroupsLoaded(groups: _cachedGroups, activeGroup: _activeGroup));
       },

@@ -15,8 +15,10 @@ import { RepayLoanDto } from './dto/repay-loan.dto';
 import { RequestLoanDto } from './dto/request-loan.dto';
 import { ApproveLoanDto } from './dto/approve-loan.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { GroupMembership } from '../common/decorators/group-membership.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { GroupRolesGuard } from '../common/guards/group-roles.guard';
+import { scopeMemberId } from '../common/utils/member-scope';
 
 @Controller('groups/:groupId/loans')
 @UseGuards(GroupRolesGuard)
@@ -67,15 +69,20 @@ export class LoansController {
   @Get()
   findAll(
     @Param('groupId') groupId: string,
-    @Query('memberId') memberId?: string,
-    @Query('status') status?: string,
+    @Query('memberId') memberId: string | undefined,
+    @Query('status') status: string | undefined,
+    @GroupMembership() membership: { id: string; role: string },
   ) {
-    return this.loansService.findAll(groupId, memberId, status);
+    return this.loansService.findAll(groupId, scopeMemberId(membership, memberId), status);
   }
 
   @Get(':loanId')
-  findOne(@Param('groupId') groupId: string, @Param('loanId') loanId: string) {
-    return this.loansService.findOne(groupId, loanId);
+  findOne(
+    @Param('groupId') groupId: string,
+    @Param('loanId') loanId: string,
+    @GroupMembership() membership: { id: string; role: string },
+  ) {
+    return this.loansService.findOne(groupId, loanId, membership);
   }
 
   @Post(':loanId/repayments')

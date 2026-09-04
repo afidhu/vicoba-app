@@ -32,6 +32,8 @@ class AddMemberEvent extends MembersEvent {
   final String? phone;
   final String role;
   final String? userId;
+  final String? email;
+  final String? password;
 
   const AddMemberEvent({
     required this.groupId,
@@ -39,10 +41,12 @@ class AddMemberEvent extends MembersEvent {
     this.phone,
     this.role = 'MEMBER',
     this.userId,
+    this.email,
+    this.password,
   });
 
   @override
-  List<Object?> get props => [groupId, name, phone, role, userId];
+  List<Object?> get props => [groupId, name, phone, role, userId, email, password];
 }
 
 class UpdateMemberEvent extends MembersEvent {

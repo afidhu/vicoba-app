@@ -2,8 +2,10 @@ import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/co
 import { ContributionsService } from './contributions.service';
 import { CreateContributionDto } from './dto/create-contribution.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { GroupMembership } from '../common/decorators/group-membership.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { GroupRolesGuard } from '../common/guards/group-roles.guard';
+import { scopeMemberId } from '../common/utils/member-scope';
 
 @Controller('groups/:groupId/contributions')
 @UseGuards(GroupRolesGuard)
@@ -21,7 +23,11 @@ export class ContributionsController {
   }
 
   @Get()
-  findAll(@Param('groupId') groupId: string, @Query('memberId') memberId?: string) {
-    return this.contributionsService.findAll(groupId, memberId);
+  findAll(
+    @Param('groupId') groupId: string,
+    @Query('memberId') memberId: string | undefined,
+    @GroupMembership() membership: { id: string; role: string },
+  ) {
+    return this.contributionsService.findAll(groupId, scopeMemberId(membership, memberId));
   }
 }
