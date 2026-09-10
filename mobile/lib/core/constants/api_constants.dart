@@ -1,7 +1,7 @@
 class ApiConstants {
   // Default to Android emulator host (10.0.2.2).
   // For physical devices or local testing, you can change to your local network IP (e.g. http://192.168.1.x:3000/api) or http://localhost:3000/api
-  static const String baseUrl = 'http://192.168.1.150:3000/api';
+  static const String baseUrl = 'http://192.168.1.149:3000/api';
   
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;
