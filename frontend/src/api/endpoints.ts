@@ -8,6 +8,7 @@ import {
   GroupMember,
   Loan,
   Meeting,
+  ShareSummary,
   Transaction,
 } from '../types';
 
@@ -39,7 +40,7 @@ export const membersApi = {
   purchaseShares: (groupId: string, memberId: string, quantity: number) =>
     apiClient.post(`/groups/${groupId}/members/${memberId}/shares`, { quantity }),
   sharesSummary: (groupId: string) =>
-    apiClient.get(`/groups/${groupId}/members/shares-summary`),
+    apiClient.get<ShareSummary>(`/groups/${groupId}/members/shares-summary`),
 };
 
 // ---- Contributions ----
@@ -72,6 +73,7 @@ export const loansApi = {
     groupId: string,
     data: {
       memberId: string;
+      guarantorId?: string;
       principal: number;
       interestRate?: number;
       issueDate: string;

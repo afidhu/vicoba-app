@@ -18,11 +18,19 @@ export default function Loans() {
   const today = toDateInputValue();
   const [form, setForm] = useState({
     memberId: '',
+    guarantorId: '',
     principal: '',
     interestRate: '',
     issueDate: today,
     dueDate: today,
   });
+
+  const selectedBorrower = members.find((m) => m.id === form.memberId);
+  const borrowerShareValue = selectedBorrower
+    ? selectedBorrower.shareHoldings * Number(activeGroup?.sharePrice ?? 0)
+    : 0;
+  const principalNum = Number(form.principal) || 0;
+  const needsGuarantor = !!selectedBorrower && principalNum > borrowerShareValue;
 
   function load() {
     if (!activeGroup) return;
@@ -44,12 +52,20 @@ export default function Loans() {
     try {
       await loansApi.create(activeGroup.id, {
         memberId: form.memberId,
+        guarantorId: needsGuarantor ? form.guarantorId : undefined,
         principal: Number(form.principal),
         interestRate: form.interestRate ? Number(form.interestRate) : undefined,
         issueDate: form.issueDate,
         dueDate: form.dueDate,
       });
-      setForm({ memberId: '', principal: '', interestRate: '', issueDate: today, dueDate: today });
+      setForm({
+        memberId: '',
+        guarantorId: '',
+        principal: '',
+        interestRate: '',
+        issueDate: today,
+        dueDate: today,
+      });
       setShowForm(false);
       load();
     } catch (err) {
@@ -150,6 +166,31 @@ export default function Loans() {
                   onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
                 />
               </div>
+              {needsGuarantor && (
+                <div className="col-md-3">
+                  <label className="form-label">
+                    Guarantor{' '}
+                    <small className="text-muted">
+                      (loan exceeds borrower's share value)
+                    </small>
+                  </label>
+                  <select
+                    className="form-select"
+                    required
+                    value={form.guarantorId}
+                    onChange={(e) => setForm({ ...form, guarantorId: e.target.value })}
+                  >
+                    <option value="">Select guarantor</option>
+                    {members
+                      .filter((m) => m.id !== form.memberId)
+                      .map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name} — {m.shareHoldings} shares
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
               <div className="col-md-1 d-flex align-items-end">
                 <button type="submit" className="btn btn-success w-100">
                   Save
@@ -174,6 +215,7 @@ export default function Loans() {
                 <th>Due</th>
                 <th className="text-end">Outstanding</th>
                 <th>Status</th>
+                <th>Guarantor</th>
                 <RoleGuard roles={['ADMIN', 'TREASURER']}>
                   <th>Repay</th>
                 </RoleGuard>
@@ -182,14 +224,14 @@ export default function Loans() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={8} className="text-center py-3">
+                  <td colSpan={9} className="text-center py-3">
                     <div className="spinner-border spinner-border-sm text-success" />
                   </td>
                 </tr>
               )}
               {!loading && loans.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="text-center text-muted py-3">
+                  <td colSpan={9} className="text-center text-muted py-3">
                     No loans issued yet
                   </td>
                 </tr>
@@ -216,6 +258,13 @@ export default function Loans() {
                     >
                       {loan.status === 'PAID' ? 'PAID' : loan.isOverdue ? 'OVERDUE' : 'ACTIVE'}
                     </span>
+                  </td>
+                  <td>
+                    {loan.guarantor
+                      ? `${loan.guarantor.name} — ${loan.guaranteedShares} share${
+                          loan.guaranteedShares === 1 ? '' : 's'
+                        }`
+                      : '—'}
                   </td>
                   <RoleGuard roles={['ADMIN', 'TREASURER']}>
                     <td>

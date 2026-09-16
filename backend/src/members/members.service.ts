@@ -11,6 +11,10 @@ import { AuditService } from '../audit/audit.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { PurchaseSharesDto } from './dto/purchase-shares.dto';
+import {
+  ENCUMBERING_LOAN_STATUSES,
+  getPledgedSharesByGuarantor,
+} from '../common/utils/share-pledges';
 
 @Injectable()
 export class MembersService {
@@ -158,22 +162,71 @@ export class MembersService {
   }
 
   async shareSummary(groupId: string, memberId?: string) {
-    const [group, members] = await Promise.all([
+    const [group, members, pledgedMap, guaranteeLoans] = await Promise.all([
       this.prisma.group.findUnique({ where: { id: groupId } }),
       this.prisma.groupMember.findMany({ where: { groupId } }),
+      getPledgedSharesByGuarantor(this.prisma, groupId),
+      this.prisma.loan.findMany({
+        where: {
+          groupId,
+          guarantorId: { not: null },
+          status: { in: ENCUMBERING_LOAN_STATUSES as any },
+        },
+        select: {
+          id: true,
+          memberId: true,
+          guarantorId: true,
+          guaranteedShares: true,
+          status: true,
+          member: { select: { name: true } },
+          guarantor: { select: { name: true } },
+        },
+      }),
     ]);
     if (!group) throw new NotFoundException('Group not found');
 
     const sharePrice = Number(group.sharePrice);
-    const toRow = (m: (typeof members)[number]) => ({
-      memberId: m.id,
-      name: m.name,
-      shareHoldings: m.shareHoldings,
-      shareValue: m.shareHoldings * sharePrice,
-    });
+
+    const asGuarantorFor = new Map<string, any[]>();
+    const guaranteedBy = new Map<string, any[]>();
+    for (const loan of guaranteeLoans) {
+      if (!loan.guarantorId) continue;
+      const guarantorList = asGuarantorFor.get(loan.guarantorId) ?? [];
+      guarantorList.push({
+        loanId: loan.id,
+        borrowerName: loan.member.name,
+        guaranteedShares: loan.guaranteedShares,
+        status: loan.status,
+      });
+      asGuarantorFor.set(loan.guarantorId, guarantorList);
+
+      const borrowerList = guaranteedBy.get(loan.memberId) ?? [];
+      borrowerList.push({
+        loanId: loan.id,
+        guarantorName: loan.guarantor?.name,
+        guaranteedShares: loan.guaranteedShares,
+        status: loan.status,
+      });
+      guaranteedBy.set(loan.memberId, borrowerList);
+    }
+
+    const toRow = (m: (typeof members)[number]) => {
+      const pledgedShares = pledgedMap.get(m.id) ?? 0;
+      return {
+        memberId: m.id,
+        name: m.name,
+        shareHoldings: m.shareHoldings,
+        shareValue: m.shareHoldings * sharePrice,
+        pledgedShares,
+        availableShares: m.shareHoldings - pledgedShares,
+        asGuarantorFor: asGuarantorFor.get(m.id) ?? [],
+        guaranteedBy: guaranteedBy.get(m.id) ?? [],
+      };
+    };
 
     // Group totals always reflect every member; the breakdown rows are what a
-    // plain MEMBER doesn't get to see beyond their own.
+    // plain MEMBER doesn't get to see beyond their own. Pledging shares as a
+    // guarantee doesn't remove them from the group, so totals stay raw sums.
     const totalShares = members.reduce((sum, m) => sum + m.shareHoldings, 0);
     const totalShareCapital = totalShares * sharePrice;
     const breakdown = (memberId ? members.filter((m) => m.id === memberId) : members).map(toRow);

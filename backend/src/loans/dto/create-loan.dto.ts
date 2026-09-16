@@ -1,8 +1,12 @@
-import { IsDateString, IsNotEmpty, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
 
 export class CreateLoanDto {
   @IsNotEmpty()
   memberId: string;
+
+  @IsOptional()
+  @IsUUID()
+  guarantorId?: string;
 
   @IsNumber()
   @Min(1)

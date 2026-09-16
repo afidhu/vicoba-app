@@ -1,6 +1,6 @@
 export type GroupRole = 'OWNER' | 'ADMIN' | 'TREASURER' | 'SECRETARY' | 'MEMBER';
 export type FineStatus = 'UNPAID' | 'PAID' | 'WAIVED';
-export type LoanStatus = 'ACTIVE' | 'PAID' | 'OVERDUE' | 'DEFAULTED';
+export type LoanStatus = 'PENDING' | 'REJECTED' | 'ACTIVE' | 'PAID' | 'OVERDUE' | 'DEFAULTED';
 export type TransactionType =
   | 'CONTRIBUTION'
   | 'SHARE_PURCHASE'
@@ -69,6 +69,9 @@ export interface Loan {
   groupId: string;
   memberId: string;
   member?: { id: string; name: string };
+  guarantorId?: string | null;
+  guarantor?: { id: string; name: string } | null;
+  guaranteedShares?: number | null;
   principal: string | number;
   interestRate: string | number;
   issueDate: string;
@@ -78,6 +81,30 @@ export interface Loan {
   totalRepaid?: number;
   outstanding?: number;
   isOverdue?: boolean;
+}
+
+export interface LoanGuaranteeRef {
+  loanId: string;
+  guaranteedShares: number;
+  status: LoanStatus;
+}
+
+export interface ShareBreakdownRow {
+  memberId: string;
+  name: string;
+  shareHoldings: number;
+  shareValue: number;
+  pledgedShares: number;
+  availableShares: number;
+  asGuarantorFor: (LoanGuaranteeRef & { borrowerName: string })[];
+  guaranteedBy: (LoanGuaranteeRef & { guarantorName: string })[];
+}
+
+export interface ShareSummary {
+  sharePrice: number;
+  totalShares: number;
+  totalShareCapital: number;
+  breakdown: ShareBreakdownRow[];
 }
 
 export interface Expense {

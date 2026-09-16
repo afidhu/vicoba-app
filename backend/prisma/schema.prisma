@@ -53,20 +53,20 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  memberships    GroupMember[]
-  ownedGroups    Group[]       @relation("GroupOwner")
-  auditLogs      AuditLog[]
+  memberships         GroupMember[]
+  ownedGroups         Group[]              @relation("GroupOwner")
+  auditLogs           AuditLog[]
   passwordResetTokens PasswordResetToken[]
 }
 
 model PasswordResetToken {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash String   @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 }
 
 model Group {
@@ -95,69 +95,73 @@ model Group {
 }
 
 model GroupMember {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   groupId       String
-  group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group         Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
   userId        String?
-  user          User?    @relation(fields: [userId], references: [id])
+  user          User?     @relation(fields: [userId], references: [id])
   name          String
   phone         String?
   role          GroupRole @default(MEMBER)
-  shareHoldings Int      @default(0)
-  isActive      Boolean  @default(true)
-  joinedAt      DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  shareHoldings Int       @default(0)
+  isActive      Boolean   @default(true)
+  joinedAt      DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  contributions Contribution[]
-  fines         Fine[]
-  loans         Loan[]
-  transactions  Transaction[]
-  attendances   MeetingAttendance[]
+  contributions   Contribution[]
+  fines           Fine[]
+  loans           Loan[]
+  guaranteedLoans Loan[]              @relation("LoanGuarantor")
+  transactions    Transaction[]
+  attendances     MeetingAttendance[]
 
   @@unique([groupId, phone])
 }
 
 model Contribution {
-  id         String   @id @default(uuid())
+  id         String      @id @default(uuid())
   groupId    String
-  group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group      Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
   memberId   String
   member     GroupMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  amount     Decimal  @db.Decimal(14, 2)
+  amount     Decimal     @db.Decimal(14, 2)
   weekEnding DateTime
-  createdAt  DateTime @default(now())
+  createdAt  DateTime    @default(now())
 }
 
 model Fine {
-  id        String     @id @default(uuid())
+  id        String      @id @default(uuid())
   groupId   String
-  group     Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group     Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
   memberId  String
   member    GroupMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
   reason    String
-  amount    Decimal    @db.Decimal(14, 2)
-  status    FineStatus @default(UNPAID)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  amount    Decimal     @db.Decimal(14, 2)
+  status    FineStatus  @default(UNPAID)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
 model Loan {
-  id           String     @id @default(uuid())
-  groupId      String
-  group        Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  memberId     String
-  member       GroupMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  principal    Decimal    @db.Decimal(14, 2)
-  interestRate Decimal    @db.Decimal(5, 2)
-  issueDate    DateTime?
-  dueDate      DateTime?
-  status       LoanStatus @default(ACTIVE)
-  requestedById String?
-  decidedById   String?
-  decidedAt     DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id               String       @id @default(uuid())
+  groupId          String
+  group            Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  memberId         String
+  member           GroupMember  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  guarantorId      String?
+  guarantor        GroupMember? @relation("LoanGuarantor", fields: [guarantorId], references: [id])
+  guaranteedShares Int?
+  principal        Decimal      @db.Decimal(14, 2)
+  interestRate     Decimal      @db.Decimal(5, 2)
+  issueDate        DateTime?
+  dueDate          DateTime?
+  status           LoanStatus   @default(ACTIVE)
+  requestedById    String?
+  decidedById      String?
+  decidedAt        DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   repayments LoanRepayment[]
 }
@@ -195,14 +199,14 @@ model Meeting {
 }
 
 model MeetingAttendance {
-  id        String   @id @default(uuid())
+  id        String      @id @default(uuid())
   meetingId String
-  meeting   Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  meeting   Meeting     @relation(fields: [meetingId], references: [id], onDelete: Cascade)
   memberId  String
   member    GroupMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  present   Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  present   Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
   @@unique([meetingId, memberId])
 }

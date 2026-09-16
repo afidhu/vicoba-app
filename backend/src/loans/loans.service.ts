@@ -3,6 +3,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { assertOwnRecordOrPrivileged } from '../common/utils/member-scope';
+import { getPledgedSharesByGuarantor } from '../common/utils/share-pledges';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { RepayLoanDto } from './dto/repay-loan.dto';
 import { RequestLoanDto } from './dto/request-loan.dto';
@@ -25,6 +26,74 @@ export class LoansService {
     return Math.max(0, Math.round((totalOwed - totalRepaid) * 100) / 100);
   }
 
+  private shareValueOf(member: { shareHoldings: number }, group: { sharePrice: any }) {
+    return member.shareHoldings * Number(group.sharePrice);
+  }
+
+  private async computeAvailableShareValue(
+    groupId: string,
+    memberId: string,
+    member: { shareHoldings: number },
+    group: { sharePrice: any },
+  ) {
+    const pledgedMap = await getPledgedSharesByGuarantor(this.prisma, groupId);
+    const pledgedShares = pledgedMap.get(memberId) ?? 0;
+    return this.shareValueOf(member, group) - pledgedShares * Number(group.sharePrice);
+  }
+
+  /**
+   * Enforces the "guarantor required when the borrower's own shares don't
+   * cover the loan" rule shared by create() and request(). Returns the
+   * guarantorId/guaranteedShares to persist (both null when no guarantor is
+   * needed), or throws if the rule is violated.
+   */
+  private async resolveGuarantor(
+    groupId: string,
+    borrowerMemberId: string,
+    principal: number,
+    guarantorId: string | undefined,
+    borrower: { shareHoldings: number },
+    group: { sharePrice: any },
+  ): Promise<{ guarantorId: string | null; guaranteedShares: number | null }> {
+    const borrowerShareValue = this.shareValueOf(borrower, group);
+    if (principal <= borrowerShareValue) {
+      return { guarantorId: null, guaranteedShares: null };
+    }
+
+    if (!guarantorId) {
+      throw new BadRequestException(
+        "This loan exceeds the borrower's share value; a guarantor is required",
+      );
+    }
+    if (guarantorId === borrowerMemberId) {
+      throw new BadRequestException('A member cannot guarantee their own loan');
+    }
+
+    const guarantor = await this.prisma.groupMember.findFirst({
+      where: { id: guarantorId, groupId },
+    });
+    if (!guarantor) throw new NotFoundException('Guarantor not found in this group');
+    if (!guarantor.isActive) {
+      throw new BadRequestException('Guarantor must be an active member');
+    }
+
+    const shortfall = principal - borrowerShareValue;
+    const guarantorAvailable = await this.computeAvailableShareValue(
+      groupId,
+      guarantorId,
+      guarantor,
+      group,
+    );
+    if (guarantorAvailable < shortfall) {
+      throw new BadRequestException(
+        'Guarantor does not have enough available shares to cover this loan',
+      );
+    }
+
+    const guaranteedShares = Math.ceil(shortfall / Number(group.sharePrice));
+    return { guarantorId, guaranteedShares };
+  }
+
   async create(groupId: string, actorUserId: string, dto: CreateLoanDto) {
     const [member, group] = await Promise.all([
       this.prisma.groupMember.findFirst({ where: { id: dto.memberId, groupId } }),
@@ -37,16 +106,30 @@ export class LoansService {
     }
 
     const interestRate = dto.interestRate ?? Number(group.loanInterestRate);
+    const { guarantorId, guaranteedShares } = await this.resolveGuarantor(
+      groupId,
+      dto.memberId,
+      dto.principal,
+      dto.guarantorId,
+      member,
+      group,
+    );
 
     const [loan, transaction] = await this.prisma.$transaction([
       this.prisma.loan.create({
         data: {
           groupId,
           memberId: dto.memberId,
+          guarantorId,
+          guaranteedShares,
           principal: dto.principal,
           interestRate,
           issueDate: new Date(dto.issueDate),
           dueDate: new Date(dto.dueDate),
+        },
+        include: {
+          member: { select: { id: true, name: true } },
+          guarantor: { select: { id: true, name: true } },
         },
       }),
       this.prisma.transaction.create({
@@ -67,7 +150,11 @@ export class LoansService {
       entity: 'Loan',
       entityId: loan.id,
       groupId,
-      metadata: { memberId: dto.memberId, principal: dto.principal },
+      metadata: {
+        memberId: dto.memberId,
+        principal: dto.principal,
+        ...(guarantorId ? { guarantorId, guaranteedShares } : {}),
+      },
     });
 
     return loan;
@@ -99,13 +186,25 @@ export class LoansService {
     }
 
     const group = await this.prisma.group.findUnique({ where: { id: groupId } });
+    if (!group) throw new NotFoundException('Group not found');
+
+    const { guarantorId, guaranteedShares } = await this.resolveGuarantor(
+      groupId,
+      memberId,
+      dto.principal,
+      dto.guarantorId,
+      member,
+      group,
+    );
 
     const loan = await this.prisma.loan.create({
       data: {
         groupId,
         memberId,
+        guarantorId,
+        guaranteedShares,
         principal: dto.principal,
-        interestRate: Number(group?.loanInterestRate ?? 0),
+        interestRate: Number(group.loanInterestRate ?? 0),
         status: 'PENDING',
         requestedById: actorMembership.id,
         dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
@@ -118,7 +217,12 @@ export class LoansService {
       entity: 'Loan',
       entityId: loan.id,
       groupId,
-      metadata: { memberId, principal: dto.principal, notes: dto.notes },
+      metadata: {
+        memberId,
+        principal: dto.principal,
+        notes: dto.notes,
+        ...(guarantorId ? { guarantorId, guaranteedShares } : {}),
+      },
     });
 
     return this.findOne(groupId, loan.id);
@@ -184,7 +288,14 @@ export class LoansService {
       metadata: { principal: Number(loan.principal) },
     });
 
-    return this.decorateLoan({ ...updated, member: undefined, repayments: [] });
+    const guarantor = updated.guarantorId
+      ? await this.prisma.groupMember.findUnique({
+          where: { id: updated.guarantorId },
+          select: { id: true, name: true },
+        })
+      : undefined;
+
+    return this.decorateLoan({ ...updated, member: undefined, guarantor, repayments: [] });
   }
 
   async reject(groupId: string, loanId: string, actorUserId: string) {
@@ -215,7 +326,14 @@ export class LoansService {
       groupId,
     });
 
-    return this.decorateLoan({ ...updated, member: undefined, repayments: [] });
+    const guarantor = updated.guarantorId
+      ? await this.prisma.groupMember.findUnique({
+          where: { id: updated.guarantorId },
+          select: { id: true, name: true },
+        })
+      : undefined;
+
+    return this.decorateLoan({ ...updated, member: undefined, guarantor, repayments: [] });
   }
 
   async findAll(groupId: string, memberId?: string, status?: string) {
@@ -223,6 +341,7 @@ export class LoansService {
       where: { groupId, ...(memberId ? { memberId } : {}), ...(status ? { status: status as any } : {}) },
       include: {
         member: { select: { id: true, name: true } },
+        guarantor: { select: { id: true, name: true } },
         repayments: true,
       },
       orderBy: { issueDate: 'desc' },
@@ -234,7 +353,11 @@ export class LoansService {
   async findOne(groupId: string, loanId: string, membership?: { id: string; role: string }) {
     const loan = await this.prisma.loan.findFirst({
       where: { id: loanId, groupId },
-      include: { member: { select: { id: true, name: true } }, repayments: true },
+      include: {
+        member: { select: { id: true, name: true } },
+        guarantor: { select: { id: true, name: true } },
+        repayments: true,
+      },
     });
     if (!loan) throw new NotFoundException('Loan not found');
     if (membership) assertOwnRecordOrPrivileged(membership, loan.memberId);
@@ -289,7 +412,10 @@ export class LoansService {
       );
     }
 
-    const [repayment, transaction] = await this.prisma.$transaction([
+    const newOutstanding = outstandingBefore - dto.amount;
+    const willBePaid = newOutstanding <= 0;
+
+    const ops: any[] = [
       this.prisma.loanRepayment.create({
         data: { loanId, amount: dto.amount },
       }),
@@ -304,15 +430,17 @@ export class LoansService {
           refId: loanId,
         },
       }),
-    ]);
-
-    const newOutstanding = outstandingBefore - dto.amount;
-    if (newOutstanding <= 0) {
-      await this.prisma.loan.update({
-        where: { id: loanId },
-        data: { status: "PAID" },
-      });
+    ];
+    if (willBePaid) {
+      ops.push(
+        this.prisma.loan.update({
+          where: { id: loanId },
+          data: { status: "PAID" },
+        }),
+      );
     }
+
+    const [repayment, transaction] = await this.prisma.$transaction(ops);
 
     await this.audit.log({
       userId: actorUserId,

@@ -1,17 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useGroup } from '../context/GroupContext';
 import { membersApi } from '../api/endpoints';
-import { GroupMember } from '../types';
+import { GroupMember, ShareSummary } from '../types';
 import { formatCurrency } from '../utils/format';
 import { getApiErrorMessage } from '../api/client';
 import RoleGuard from '../components/RoleGuard';
-
-interface ShareSummary {
-  sharePrice: number;
-  totalShares: number;
-  totalShareCapital: number;
-  breakdown: { memberId: string; name: string; shareHoldings: number; shareValue: number }[];
-}
 
 export default function Shares() {
   const { activeGroup } = useGroup();
@@ -29,7 +22,7 @@ export default function Shares() {
       membersApi.list(activeGroup.id),
     ])
       .then(([s, m]) => {
-        setSummary(s.data as ShareSummary);
+        setSummary(s.data);
         setMembers(m.data.filter((mm) => mm.isActive));
       })
       .finally(() => setLoading(false));
@@ -136,7 +129,9 @@ export default function Shares() {
               <tr>
                 <th>Member</th>
                 <th>Shares held</th>
+                <th>Available shares</th>
                 <th className="text-end">Value</th>
+                <th>Guarantee notes</th>
               </tr>
             </thead>
             <tbody>
@@ -144,7 +139,21 @@ export default function Shares() {
                 <tr key={b.memberId}>
                   <td className="fw-semibold">{b.name}</td>
                   <td>{b.shareHoldings}</td>
+                  <td>{b.availableShares}</td>
                   <td className="text-end">{formatCurrency(b.shareValue)}</td>
+                  <td>
+                    {b.asGuarantorFor.map((g) => (
+                      <div key={g.loanId} className="small text-muted">
+                        Guaranteeing {g.guaranteedShares} shares for {g.borrowerName}
+                      </div>
+                    ))}
+                    {b.guaranteedBy.map((g) => (
+                      <div key={g.loanId} className="small text-muted">
+                        Backed by {g.guarantorName} — {g.guaranteedShares} shares
+                      </div>
+                    ))}
+                    {b.asGuarantorFor.length === 0 && b.guaranteedBy.length === 0 && '—'}
+                  </td>
                 </tr>
               ))}
             </tbody>
