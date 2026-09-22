@@ -16,6 +16,7 @@ export class DashboardService {
       loans,
       expenses,
       recentTransactions,
+      attachments,
     ] = await Promise.all([
       this.prisma.groupMember.findMany({ where: { groupId } }),
       this.prisma.contribution.aggregate({
@@ -30,6 +31,18 @@ export class DashboardService {
         include: { member: { select: { id: true, name: true } } },
         orderBy: { createdAt: 'desc' },
         take: 10,
+      }),
+      this.prisma.groupAttachment.findMany({
+        where: { groupId },
+        select: {
+          id: true,
+          fileName: true,
+          mimeType: true,
+          size: true,
+          createdAt: true,
+          uploadedBy: { select: { name: true } },
+        },
+        orderBy: { createdAt: 'desc' },
       }),
     ]);
 
@@ -78,6 +91,7 @@ export class DashboardService {
         totalExpenses: expenses._sum.amount ?? 0,
       },
       recentTransactions,
+      attachments,
     };
   }
 }

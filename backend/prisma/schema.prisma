@@ -57,6 +57,7 @@ model User {
   ownedGroups         Group[]              @relation("GroupOwner")
   auditLogs           AuditLog[]
   passwordResetTokens PasswordResetToken[]
+  uploadedAttachments GroupAttachment[]
 }
 
 model PasswordResetToken {
@@ -92,6 +93,7 @@ model Group {
   meetings      Meeting[]
   transactions  Transaction[]
   auditLogs     AuditLog[]
+  attachments   GroupAttachment[]
 }
 
 model GroupMember {
@@ -173,6 +175,21 @@ model LoanRepayment {
   amount    Decimal  @db.Decimal(14, 2)
   paidAt    DateTime @default(now())
   createdAt DateTime @default(now())
+}
+
+model GroupAttachment {
+  id           String   @id @default(uuid())
+  groupId      String
+  group        Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  fileName     String
+  mimeType     String
+  size         Int
+  data         Bytes
+  createdAt    DateTime @default(now())
+
+  @@index([groupId, createdAt])
 }
 
 model Expense {

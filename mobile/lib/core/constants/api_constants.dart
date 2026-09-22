@@ -19,6 +19,11 @@ class ApiConstants {
   // Groups endpoints
   static const String groups = '/groups';
   static String groupDetails(String groupId) => '/groups/$groupId';
+  static String attachments(String groupId) => '/groups/$groupId/attachments';
+    static String attachmentDownload(String groupId, String attachmentId) =>
+      '/groups/$groupId/attachments/$attachmentId/download';
+    static String attachmentDelete(String groupId, String attachmentId) =>
+      '/groups/$groupId/attachments/$attachmentId';
 
   // Members endpoints
   static String members(String groupId) => '/groups/$groupId/members';

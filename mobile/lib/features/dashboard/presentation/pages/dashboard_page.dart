@@ -23,6 +23,7 @@ import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../members/presentation/bloc/members_bloc.dart';
 import '../../../members/presentation/bloc/members_event.dart';
 import '../../../members/presentation/bloc/members_state.dart';
+import '../../../groups/presentation/widgets/group_attachments_panel.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -32,6 +33,19 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  void _openGroupFiles(BuildContext context, String groupId, String role) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => FractionallySizedBox(
+        heightFactor: 0.78,
+        child: GroupAttachmentsPanel(
+          groupId: groupId,
+          canUpload: role == 'OWNER' || role == 'ADMIN',
+        ),
+      ),
+    );
+  }
   @override
   void initState() {
     super.initState();
@@ -73,6 +87,21 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
         actions: [
+          Builder(
+            builder: (context) {
+              final role = context.watch<ActiveGroupCubit>().state.role;
+              if (role != 'OWNER' && role != 'ADMIN') return const SizedBox.shrink();
+              return IconButton(
+                tooltip: 'Upload group file',
+                icon: const Icon(Icons.add),
+                onPressed: () => _openGroupFiles(
+                  context,
+                  context.read<ActiveGroupCubit>().state.groupId!,
+                      role!,
+                ),
+              );
+            },
+          ),
           Builder(
             builder: (context) => PopupMenuButton<String>(
               icon: const Icon(Icons.menu),

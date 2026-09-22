@@ -16,6 +16,7 @@ import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../members/presentation/bloc/members_bloc.dart';
 import '../../../members/presentation/bloc/members_event.dart';
 import '../../../members/presentation/bloc/members_state.dart';
+import '../widgets/group_attachments_panel.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final String groupId;
@@ -27,6 +28,23 @@ class GroupDetailPage extends StatefulWidget {
 }
 
 class _GroupDetailPageState extends State<GroupDetailPage> {
+  void _openGroupFiles(BuildContext context, String groupId, String role) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => FractionallySizedBox(
+        heightFactor: 0.78,
+        child: GroupAttachmentsPanel(
+          groupId: groupId,
+          canUpload: role == 'OWNER' || role == 'ADMIN',
+        ),
+      ),
+    );
+  }
+
+  void _handleBack() {
+    context.read<GroupsBloc>().add(LoadGroupsEvent());
+  }
   @override
   void initState() {
     super.initState();
@@ -45,9 +63,29 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) => _handleBack(),
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Group Overview'),
+        actions: [
+          Builder(
+            builder: (context) {
+              final role = context.watch<ActiveGroupCubit>().state.role;
+              if (role != 'OWNER' && role != 'ADMIN') return const SizedBox.shrink();
+              return IconButton(
+                tooltip: 'Upload group file',
+                icon: const Icon(Icons.add),
+                onPressed: () => _openGroupFiles(
+                  context,
+                  widget.groupId,
+                      role!,
+                ),
+              );
+            },
+          ),
+          const Icon(Icons.more_vert),
+        ],
       ),
       body: MultiBlocListener(
         listeners: [
@@ -280,6 +318,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
           return const SizedBox.shrink();
         },
         ),
+      ),
       ),
     );
   }

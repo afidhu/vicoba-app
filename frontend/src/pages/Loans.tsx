@@ -219,19 +219,20 @@ export default function Loans() {
                 <RoleGuard roles={['ADMIN', 'TREASURER']}>
                   <th>Repay</th>
                 </RoleGuard>
+                <th>Installments</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={9} className="text-center py-3">
+                  <td colSpan={10} className="text-center py-3">
                     <div className="spinner-border spinner-border-sm text-success" />
                   </td>
                 </tr>
               )}
               {!loading && loans.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="text-center text-muted py-3">
+                  <td colSpan={10} className="text-center text-muted py-3">
                     No loans issued yet
                   </td>
                 </tr>
@@ -290,6 +291,21 @@ export default function Loans() {
                       )}
                     </td>
                   </RoleGuard>
+                  <td>
+                    <details>
+                      <summary className="small text-success" style={{ cursor: 'pointer' }}>
+                        {loan.repayments?.length ?? 0} payment{(loan.repayments?.length ?? 0) === 1 ? '' : 's'}
+                      </summary>
+                      <div className="small mt-2">
+                        {(loan.repayments ?? []).map((repayment) => (
+                          <div key={repayment.id} className="d-flex justify-content-between gap-3">
+                            <span>{formatDate(repayment.paidAt)}</span>
+                            <strong>{formatCurrency(repayment.amount)}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -15,6 +15,7 @@ class Loan extends Equatable {
   final String status;
   final String? notes;
   final String memberName;
+  final List<LoanInstallment> repayments;
 
   const Loan({
     required this.id,
@@ -31,6 +32,7 @@ class Loan extends Equatable {
     required this.status,
     this.notes,
     required this.memberName,
+    this.repayments = const [],
   });
 
   @override
@@ -49,5 +51,17 @@ class Loan extends Equatable {
         status,
         notes,
         memberName,
+        repayments,
       ];
+}
+
+class LoanInstallment extends Equatable {
+  final String id;
+  final double amount;
+  final DateTime paidAt;
+
+  const LoanInstallment({required this.id, required this.amount, required this.paidAt});
+
+  @override
+  List<Object?> get props => [id, amount, paidAt];
 }

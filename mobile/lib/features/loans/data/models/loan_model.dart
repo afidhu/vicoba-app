@@ -22,6 +22,7 @@ class LoanModel extends Loan {
     required super.status,
     super.notes,
     required super.memberName,
+    super.repayments,
   });
 
   /// Maps the backend loan shape:
@@ -54,6 +55,16 @@ class LoanModel extends Loan {
       status: json['status'] ?? 'PENDING',
       notes: json['notes'],
       memberName: json['member']?['name'] ?? json['memberName'] ?? 'Unknown',
+      repayments: ((json['repayments'] as List?) ?? [])
+          .map((item) => LoanInstallment(
+                id: item['id']?.toString() ?? '',
+                amount: _d(item['amount']),
+                paidAt: DateTime.tryParse(
+                      (item['paidAt'] ?? item['createdAt'] ?? '').toString(),
+                    ) ??
+                    DateTime.now(),
+              ))
+          .toList(),
     );
   }
 }

@@ -15,6 +15,7 @@ import '../bloc/contributions_bloc.dart';
 import '../bloc/contributions_event.dart';
 import '../bloc/contributions_state.dart';
 import '../widgets/record_contribution_dialog.dart';
+import '../../../groups/presentation/widgets/group_attachments_panel.dart';
 
 class ContributionsPage extends StatefulWidget {
   final String groupId;
@@ -42,6 +43,27 @@ class _ContributionsPageState extends State<ContributionsPage> {
       appBar: AppBar(
         title: const Text('Weekly Contributions'),
         actions: [
+          IconButton(
+            tooltip: 'Open group files',
+            icon: const Icon(Icons.folder_open_outlined),
+            onPressed: () {
+              final role = context.read<ActiveGroupCubit>().state.role;
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => FractionallySizedBox(
+                  heightFactor: 0.75,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: GroupAttachmentsPanel(
+                      groupId: widget.groupId,
+                      canUpload: role == 'OWNER' || role == 'ADMIN',
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
           if (canRecord)
             IconButton(
               icon: const Icon(Icons.add, color: AppColors.primary),

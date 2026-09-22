@@ -75,6 +75,26 @@ class _LoansPageState extends State<LoansPage> {
                             Text(
                               'Due Date: ${loan.dueDate != null ? DateFormat('yyyy-MM-dd').format(loan.dueDate!) : '—'}',
                             ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Repayment activity (${loan.repayments.length})',
+                              style: const TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            if (loan.repayments.isEmpty)
+                              const Padding(
+                                padding: EdgeInsets.only(top: 4),
+                                child: Text('No installments recorded yet.'),
+                              )
+                            else
+                              ...loan.repayments.map(
+                                (payment) => ListTile(
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: const Icon(Icons.check_circle_outline, color: Colors.green),
+                                  title: Text('TSH ${payment.amount.toStringAsFixed(2)}'),
+                                  subtitle: Text(DateFormat('yyyy-MM-dd HH:mm').format(payment.paidAt)),
+                                ),
+                              ),
                             const SizedBox(height: 16),
                             if (loan.status == 'PENDING' &&
                                 Permissions.canManageLoans(

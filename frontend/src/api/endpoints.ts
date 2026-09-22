@@ -84,6 +84,16 @@ export const loansApi = {
     apiClient.post(`/groups/${groupId}/loans/${loanId}/repayments`, { amount }),
 };
 
+export const attachmentsApi = {
+  list: (groupId: string) => apiClient.get(`/groups/${groupId}/attachments`),
+  remove: (groupId: string, attachmentId: string) =>
+    apiClient.delete(`/groups/${groupId}/attachments/${attachmentId}`),
+  download: (groupId: string, attachmentId: string) =>
+    apiClient.get(`/groups/${groupId}/attachments/${attachmentId}/download`, {
+      responseType: 'blob',
+    }),
+};
+
 // ---- Expenses ----
 export const expensesApi = {
   list: (groupId: string) => apiClient.get<Expense[]>(`/groups/${groupId}/expenses`),

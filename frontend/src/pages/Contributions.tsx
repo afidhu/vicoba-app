@@ -5,14 +5,16 @@ import { Contribution, GroupMember } from '../types';
 import { formatCurrency, formatDate, toDateInputValue } from '../utils/format';
 import { getApiErrorMessage } from '../api/client';
 import RoleGuard from '../components/RoleGuard';
+import GroupFiles from '../components/GroupFiles';
 
 export default function Contributions() {
-  const { activeGroup } = useGroup();
+  const { activeGroup, myMembership } = useGroup();
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
+  const [showFiles, setShowFiles] = useState(false);
   const [form, setForm] = useState({
     memberId: '',
     amount: '',
@@ -57,12 +59,38 @@ export default function Contributions() {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4 className="fw-bold mb-0">Weekly Contributions</h4>
-        <RoleGuard roles={['ADMIN', 'TREASURER']}>
-          <button className="btn btn-success" onClick={() => setShowForm((v) => !v)}>
-            <i className="bi bi-plus-lg me-1" /> Record contribution
+        <div className="d-flex gap-2">
+          <button className="btn btn-outline-secondary" onClick={() => setShowFiles(true)}>
+            <i className="bi bi-folder2-open me-1" /> Open files
           </button>
-        </RoleGuard>
+          <RoleGuard roles={['ADMIN', 'TREASURER']}>
+            <button className="btn btn-success" onClick={() => setShowForm((v) => !v)}>
+              <i className="bi bi-plus-lg me-1" /> Record contribution
+            </button>
+          </RoleGuard>
+        </div>
       </div>
+
+      {showFiles && (
+        <div className="modal d-block" tabIndex={-1} role="dialog" style={{ background: 'rgba(0,0,0,.5)' }}>
+          <div className="modal-dialog modal-dialog-scrollable">
+            <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Group files</h5>
+              <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowFiles(false)} />
+            </div>
+            <div className="modal-body">
+              {activeGroup && (
+                <GroupFiles
+                  groupId={activeGroup.id}
+                  canDelete={myMembership?.role === 'OWNER' || myMembership?.role === 'ADMIN'}
+                />
+              )}
+            </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div className="card border-0 shadow-sm mb-3">

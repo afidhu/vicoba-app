@@ -17,6 +17,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { ReportsModule } from './reports/reports.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { GroupRolesGuard } from './common/guards/group-roles.guard';
+import { AttachmentsModule } from './attachments/attachments.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { GroupRolesGuard } from './common/guards/group-roles.guard';
     TransactionsModule,
     DashboardModule,
     ReportsModule,
+    AttachmentsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

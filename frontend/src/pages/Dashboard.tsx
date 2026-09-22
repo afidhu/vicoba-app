@@ -3,6 +3,7 @@ import { useGroup } from '../context/GroupContext';
 import { dashboardApi } from '../api/endpoints';
 import { DashboardSummary } from '../types';
 import { formatCurrency, formatDate } from '../utils/format';
+import GroupFiles from '../components/GroupFiles';
 
 function StatCard({
   label,
@@ -34,9 +35,10 @@ function StatCard({
 }
 
 export default function Dashboard() {
-  const { activeGroup } = useGroup();
+  const { activeGroup, myMembership } = useGroup();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showFiles, setShowFiles] = useState(false);
 
   useEffect(() => {
     if (!activeGroup) return;
@@ -57,6 +59,9 @@ export default function Dashboard() {
       <p className="text-muted">
         {summary.group.location} &bull; Meets {summary.group.meetingDay || 'N/A'}
       </p>
+      <button className="btn btn-outline-secondary btn-sm mb-3" onClick={() => setShowFiles(true)}>
+        <i className="bi bi-folder2-open me-1" /> Open files
+      </button>
 
       <div className="row g-3 mb-4">
         <StatCard
@@ -162,6 +167,25 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {showFiles && (
+        <div className="modal d-block" tabIndex={-1} role="dialog" style={{ background: 'rgba(0,0,0,.5)' }}>
+          <div className="modal-dialog modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Group files</h5>
+                <button className="btn-close" title="Close" onClick={() => setShowFiles(false)} />
+              </div>
+              <div className="modal-body">
+                <GroupFiles
+                  groupId={summary.group.id}
+                  canDelete={myMembership?.role === 'OWNER' || myMembership?.role === 'ADMIN'}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

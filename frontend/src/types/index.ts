@@ -83,6 +83,15 @@ export interface Loan {
   isOverdue?: boolean;
 }
 
+export interface GroupAttachment {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  createdAt: string;
+  uploadedBy?: { name: string };
+}
+
 export interface LoanGuaranteeRef {
   loanId: string;
   guaranteedShares: number;
@@ -145,4 +154,5 @@ export interface DashboardSummary {
     totalExpenses: string | number;
   };
   recentTransactions: Transaction[];
+  attachments: GroupAttachment[];
 }
