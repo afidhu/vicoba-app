@@ -1,0 +1,20 @@
+{
+  "services": {
+    "vicoba-backend": {
+      "root": "backend/"
+    },
+    "vicoba-frontend": {
+      "root": "frontend/"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": { "service": "vicoba-backend" }
+    },
+    {
+      "source": "/(.*)",
+      "destination": { "service": "vicoba-frontend" }
+    }
+  ]
+}
