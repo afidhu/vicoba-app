@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 class Group extends Equatable {
   final String id;
   final String name;
+  final String? registrationNumber;
   final String? location;
   final String? meetingDay;
   final double weeklyContribution;
@@ -14,6 +15,7 @@ class Group extends Equatable {
   const Group({
     required this.id,
     required this.name,
+    this.registrationNumber,
     this.location,
     this.meetingDay,
     this.weeklyContribution = 0.0,
@@ -25,14 +27,15 @@ class Group extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        location,
-        meetingDay,
-        weeklyContribution,
-        sharePrice,
-        fineDefaultAmount,
-        loanInterestRate,
-        memberCount,
-      ];
+    id,
+    name,
+    registrationNumber,
+    location,
+    meetingDay,
+    weeklyContribution,
+    sharePrice,
+    fineDefaultAmount,
+    loanInterestRate,
+    memberCount,
+  ];
 }

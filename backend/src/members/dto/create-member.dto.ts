@@ -17,6 +17,11 @@ export class CreateMemberDto {
   phone?: string;
 
   @IsOptional()
+  @Transform(blankToUndefined)
+  @IsString()
+  nidaNumber?: string;
+
+  @IsOptional()
   // @IsEnum(GroupRole)
   role?: string;
 

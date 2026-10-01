@@ -21,7 +21,10 @@ class MembersRepositoryImpl implements MembersRepository {
   }
 
   @override
-  Future<Either<Failure, Member>> getMemberDetails(String groupId, String memberId) async {
+  Future<Either<Failure, Member>> getMemberDetails(
+    String groupId,
+    String memberId,
+  ) async {
     try {
       final result = await remoteDataSource.getMemberDetails(groupId, memberId);
       return Right(result);
@@ -35,6 +38,7 @@ class MembersRepositoryImpl implements MembersRepository {
     required String groupId,
     required String name,
     String? phone,
+    String? nidaNumber,
     String? role,
     String? userId,
     String? email,
@@ -44,6 +48,8 @@ class MembersRepositoryImpl implements MembersRepository {
       final data = {
         'name': name,
         if (phone != null && phone.isNotEmpty) 'phone': phone,
+        if (nidaNumber != null && nidaNumber.isNotEmpty)
+          'nidaNumber': nidaNumber,
         if (role != null) 'role': role,
         if (userId != null && userId.isNotEmpty) 'userId': userId,
         if (email != null && email.isNotEmpty) 'email': email,
@@ -72,7 +78,11 @@ class MembersRepositoryImpl implements MembersRepository {
         if (role != null) 'role': role,
         if (isActive != null) 'isActive': isActive,
       };
-      final result = await remoteDataSource.updateMember(groupId, memberId, data);
+      final result = await remoteDataSource.updateMember(
+        groupId,
+        memberId,
+        data,
+      );
       return Right(result);
     } catch (e) {
       return Left(ApiErrorHandler.handle(e));

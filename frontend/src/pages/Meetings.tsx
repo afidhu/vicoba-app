@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useGroup } from '../context/GroupContext';
-import { meetingsApi } from '../api/endpoints';
+import { meetingsApi, membersApi } from '../api/endpoints';
 import { Meeting } from '../types';
 import { formatDate, toDateInputValue } from '../utils/format';
 import { getApiErrorMessage } from '../api/client';
@@ -13,6 +13,7 @@ export default function Meetings() {
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ date: toDateInputValue(), notes: '' });
+  const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
 
   function load() {
     if (!activeGroup) return;
@@ -102,10 +103,136 @@ export default function Meetings() {
                 <div className="fw-semibold">{formatDate(m.date)}</div>
                 <small className="text-muted">{m.notes || 'No notes'}</small>
               </div>
-              <i className="bi bi-calendar-event text-success fs-5" />
+              <RoleGuard
+                roles={['ADMIN', 'SECRETARY']}
+                fallback={<i className="bi bi-calendar-event text-success fs-5" />}
+              >
+                <button
+                  className="btn btn-sm btn-outline-success"
+                  onClick={() => setSelectedMeetingId((current) => current === m.id ? null : m.id)}
+                >
+                  {selectedMeetingId === m.id ? 'Close attendance' : 'Record attendance'}
+                </button>
+              </RoleGuard>
             </li>
           ))}
         </ul>
+      </div>
+
+      {selectedMeetingId && activeGroup && (
+        <AttendancePanel
+          groupId={activeGroup.id}
+          meetingId={selectedMeetingId}
+          onClose={() => setSelectedMeetingId(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function AttendancePanel({
+  groupId,
+  meetingId,
+  onClose,
+}: {
+  groupId: string;
+  meetingId: string;
+  onClose: () => void;
+}) {
+  const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
+  const [attendance, setAttendance] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    let current = true;
+    setLoading(true);
+    setError('');
+    Promise.all([meetingsApi.get(groupId, meetingId), membersApi.list(groupId)])
+      .then(([{ data: meeting }, { data: groupMembers }]) => {
+        if (!current) return;
+        setMembers(groupMembers.map(({ id, name }) => ({ id, name })));
+        setAttendance(Object.fromEntries(
+          groupMembers.map((member) => [
+            member.id,
+            meeting.attendances?.find((record) => record.memberId === member.id)?.present ?? true,
+          ]),
+        ));
+      })
+      .catch((err) => {
+        if (current) setError(getApiErrorMessage(err));
+      })
+      .finally(() => {
+        if (current) setLoading(false);
+      });
+    return () => { current = false; };
+  }, [groupId, meetingId]);
+
+  async function saveAttendance() {
+    setSaving(true);
+    setError('');
+    setSaved(false);
+    try {
+      await meetingsApi.recordAttendance(
+        groupId,
+        meetingId,
+        members.map((member) => ({ memberId: member.id, present: attendance[member.id] })),
+      );
+      setSaved(true);
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="card border-0 shadow-sm mt-3">
+      <div className="card-header bg-white d-flex justify-content-between align-items-center">
+        <span className="fw-semibold">Meeting attendance</span>
+        <button className="btn-close" aria-label="Close" onClick={onClose} />
+      </div>
+      <div className="card-body">
+        {error && <div className="alert alert-danger py-2">{error}</div>}
+        {saved && <div className="alert alert-success py-2">Attendance saved.</div>}
+        {loading ? (
+          <div className="text-center py-3"><div className="spinner-border spinner-border-sm text-success" /></div>
+        ) : members.length === 0 ? (
+          <div className="text-muted">No members to record.</div>
+        ) : (
+          <>
+            <div className="table-responsive">
+              <table className="table table-sm align-middle mb-3">
+                <thead><tr><th>Member</th><th style={{ width: 240 }}>Status</th></tr></thead>
+                <tbody>
+                  {members.map((member) => (
+                    <tr key={member.id}>
+                      <td>{member.name}</td>
+                      <td>
+                        <select
+                          className="form-select form-select-sm"
+                          value={attendance[member.id] ? 'ATTENDED' : 'NOT_ATTENDED'}
+                          onChange={(event) => setAttendance({
+                            ...attendance,
+                            [member.id]: event.target.value === 'ATTENDED',
+                          })}
+                        >
+                          <option value="ATTENDED">Attendance</option>
+                          <option value="NOT_ATTENDED">Non-attendance</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <button className="btn btn-success" onClick={saveAttendance} disabled={saving}>
+              {saving ? 'Saving…' : 'Save attendance'}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -35,14 +35,51 @@ class _ReportsPageState extends State<ReportsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Group Summary', style: Theme.of(context).textTheme.headlineSmall),
+                  Text(
+                    'Group Summary',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
                   const SizedBox(height: 16),
-                  _buildReportCard('Total Contributions', summary.totalContributions, Colors.teal),
-                  _buildReportCard('Total Shares', summary.totalShares, Colors.indigo),
-                  _buildReportCard('Total Fines', summary.totalFines, Colors.amber),
-                  _buildReportCard('Loan Repayments', summary.totalRepayments, Colors.green),
-                  _buildReportCard('Loan Disbursements', summary.totalDisbursements, Colors.orange),
-                  _buildReportCard('Group Expenses', summary.totalExpenses, Colors.red),
+                  _buildReportCard(
+                    'Total Contributions',
+                    summary.totalContributions,
+                    Colors.teal,
+                  ),
+                  _buildReportCard(
+                    'Total Shares',
+                    summary.totalShares,
+                    Colors.indigo,
+                  ),
+                  _buildReportCard(
+                    'Total Fines',
+                    summary.totalFines,
+                    Colors.amber,
+                  ),
+                  _buildReportCard(
+                    'Loan Repayments',
+                    summary.totalRepayments,
+                    Colors.green,
+                  ),
+                  _buildReportCard(
+                    'Loan Disbursements',
+                    summary.totalDisbursements,
+                    Colors.orange,
+                  ),
+                  _buildReportCard(
+                    'Group Expenses',
+                    summary.totalExpenses,
+                    Colors.red,
+                  ),
+                  _buildReportCard(
+                    'Attendance',
+                    summary.totalAttendance,
+                    Colors.teal,
+                  ),
+                  _buildReportCard(
+                    'Non-attendance',
+                    summary.totalNonAttendance,
+                    Colors.deepOrange,
+                  ),
                   const Divider(height: 32),
                   _buildReportCard(
                     'Available Balance',
@@ -62,7 +99,12 @@ class _ReportsPageState extends State<ReportsPage> {
     );
   }
 
-  Widget _buildReportCard(String title, double amount, Color color, {bool isMain = false}) {
+  Widget _buildReportCard(
+    String title,
+    num amount,
+    Color color, {
+    bool isMain = false,
+  }) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(

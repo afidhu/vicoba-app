@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useGroup } from '../context/GroupContext';
-import { membersApi } from '../api/endpoints';
-import { GroupMember, GroupRole } from '../types';
+import { membersApi, transactionsApi } from '../api/endpoints';
+import { GroupMember, GroupRole, Transaction } from '../types';
 import { getApiErrorMessage } from '../api/client';
-import { formatDate } from '../utils/format';
+import { formatCurrency, formatDate } from '../utils/format';
 import RoleGuard from '../components/RoleGuard';
 
 const ROLES: GroupRole[] = ['ADMIN', 'TREASURER', 'SECRETARY', 'MEMBER'];
@@ -14,9 +14,13 @@ export default function Members() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ name: '', phone: '', role: 'MEMBER' as GroupRole });
+  const [form, setForm] = useState({ name: '', phone: '', nidaNumber: '', role: 'MEMBER' as GroupRole });
   const [createLogin, setCreateLogin] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const [selectedMember, setSelectedMember] = useState<GroupMember | null>(null);
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [recentTransactionsLoading, setRecentTransactionsLoading] = useState(false);
+  const [recentTransactionsError, setRecentTransactionsError] = useState('');
 
   function load() {
     if (!activeGroup) return;
@@ -29,6 +33,25 @@ export default function Members() {
 
   useEffect(load, [activeGroup]);
 
+  useEffect(() => {
+    if (!activeGroup || !selectedMember) return;
+    let current = true;
+    setRecentTransactions([]);
+    setRecentTransactionsLoading(true);
+    setRecentTransactionsError('');
+    transactionsApi.list(activeGroup.id, { memberId: selectedMember.id })
+      .then(({ data }) => {
+        if (current) setRecentTransactions(data.slice(0, 10));
+      })
+      .catch((err) => {
+        if (current) setRecentTransactionsError(getApiErrorMessage(err));
+      })
+      .finally(() => {
+        if (current) setRecentTransactionsLoading(false);
+      });
+    return () => { current = false; };
+  }, [activeGroup?.id, selectedMember?.id]);
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!activeGroup) return;
@@ -38,7 +61,7 @@ export default function Members() {
         ...form,
         ...(createLogin ? loginForm : {}),
       });
-      setForm({ name: '', phone: '', role: 'MEMBER' });
+      setForm({ name: '', phone: '', nidaNumber: '', role: 'MEMBER' });
       setLoginForm({ email: '', password: '' });
       setCreateLogin(false);
       setShowForm(false);
@@ -76,7 +99,7 @@ export default function Members() {
           <div className="card-body">
             {error && <div className="alert alert-danger py-2">{error}</div>}
             <form className="row g-3" onSubmit={handleCreate}>
-              <div className="col-md-4">
+              <div className="col-md-3">
                 <label className="form-label">Name</label>
                 <input
                   className="form-control"
@@ -85,7 +108,7 @@ export default function Members() {
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                 />
               </div>
-              <div className="col-md-4">
+              <div className="col-md-3">
                 <label className="form-label">Phone</label>
                 <input
                   className="form-control"
@@ -94,6 +117,14 @@ export default function Members() {
                 />
               </div>
               <div className="col-md-3">
+                <label className="form-label">NIDA number</label>
+                <input
+                  className="form-control"
+                  value={form.nidaNumber}
+                  onChange={(e) => setForm({ ...form, nidaNumber: e.target.value })}
+                />
+              </div>
+              <div className="col-md-2">
                 <label className="form-label">Role</label>
                 <select
                   className="form-select"
@@ -188,7 +219,14 @@ export default function Members() {
               )}
               {members.map((m) => (
                 <tr key={m.id}>
-                  <td className="fw-semibold">{m.name}</td>
+                  <td>
+                    <button
+                      className="btn btn-link p-0 fw-semibold text-decoration-none"
+                      onClick={() => setSelectedMember(m)}
+                    >
+                      {m.name}
+                    </button>
+                  </td>
                   <td>{m.phone || '-'}</td>
                   <td>
                     <RoleGuard
@@ -236,6 +274,69 @@ export default function Members() {
           </table>
         </div>
       </div>
+
+      {selectedMember && (
+        <div
+          className="modal d-block"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="member-profile-title"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)' }}
+        >
+          <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header">
+                <div>
+                  <h5 className="modal-title fw-bold" id="member-profile-title">Member Profile</h5>
+                  <div className="text-muted">{selectedMember.name}</div>
+                </div>
+                <button
+                  type="button"
+                  className="btn-close"
+                  aria-label="Close"
+                  onClick={() => setSelectedMember(null)}
+                />
+              </div>
+              <div className="modal-body">
+                <div className="row g-2 mb-4">
+                  <div className="col-sm-4"><span className="text-muted">Phone:</span> {selectedMember.phone || '-'}</div>
+                  <div className="col-sm-4"><span className="text-muted">NIDA:</span> {selectedMember.nidaNumber || '-'}</div>
+                  <div className="col-sm-4"><span className="text-muted">Role:</span> {selectedMember.role}</div>
+                  <div className="col-sm-4"><span className="text-muted">Shares:</span> {selectedMember.shareHoldings}</div>
+                </div>
+                <h6 className="fw-semibold mb-3">Recent Transactions</h6>
+                {recentTransactionsLoading ? (
+                  <div className="text-center py-3"><div className="spinner-border spinner-border-sm text-success" /></div>
+                ) : recentTransactionsError ? (
+                  <div className="alert alert-danger py-2">{recentTransactionsError}</div>
+                ) : recentTransactions.length === 0 ? (
+                  <div className="text-muted py-2">No transactions recorded for this member.</div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-sm align-middle mb-0">
+                      <thead>
+                        <tr><th>Date</th><th>Type</th><th>Description</th><th className="text-end">Amount</th></tr>
+                      </thead>
+                      <tbody>
+                        {recentTransactions.map((transaction) => (
+                          <tr key={transaction.id}>
+                            <td>{formatDate(transaction.createdAt)}</td>
+                            <td>{transaction.type.replace(/_/g, ' ')}</td>
+                            <td>{transaction.description || '-'}</td>
+                            <td className={`text-end fw-semibold ${transaction.direction === 'IN' ? 'text-success' : 'text-danger'}`}>
+                              {transaction.direction === 'IN' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

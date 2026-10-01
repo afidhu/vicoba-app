@@ -10,6 +10,7 @@ class CreateGroupUseCase {
 
   Future<Either<Failure, Group>> call({
     required String name,
+    String? registrationNumber,
     String? location,
     String? meetingDay,
     double? weeklyContribution,
@@ -19,6 +20,7 @@ class CreateGroupUseCase {
   }) {
     return repository.createGroup(
       name: name,
+      registrationNumber: registrationNumber,
       location: location,
       meetingDay: meetingDay,
       weeklyContribution: weeklyContribution,

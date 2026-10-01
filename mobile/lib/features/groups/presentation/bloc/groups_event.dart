@@ -20,6 +20,7 @@ class LoadGroupDetailsEvent extends GroupsEvent {
 
 class CreateGroupEvent extends GroupsEvent {
   final String name;
+  final String? registrationNumber;
   final String? location;
   final String? meetingDay;
   final double? weeklyContribution;
@@ -29,6 +30,7 @@ class CreateGroupEvent extends GroupsEvent {
 
   const CreateGroupEvent({
     required this.name,
+    this.registrationNumber,
     this.location,
     this.meetingDay,
     this.weeklyContribution,
@@ -39,21 +41,25 @@ class CreateGroupEvent extends GroupsEvent {
 
   @override
   List<Object?> get props => [
-        name,
-        location,
-        meetingDay,
-        weeklyContribution,
-        sharePrice,
-        fineDefaultAmount,
-        loanInterestRate,
-      ];
+    name,
+    registrationNumber,
+    location,
+    meetingDay,
+    weeklyContribution,
+    sharePrice,
+    fineDefaultAmount,
+    loanInterestRate,
+  ];
 }
 
 class SelectActiveGroupEvent extends GroupsEvent {
   final String groupId;
   final String groupName;
 
-  const SelectActiveGroupEvent({required this.groupId, required this.groupName});
+  const SelectActiveGroupEvent({
+    required this.groupId,
+    required this.groupName,
+  });
 
   @override
   List<Object?> get props => [groupId, groupName];

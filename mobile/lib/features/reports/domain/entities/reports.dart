@@ -8,6 +8,8 @@ class GroupFinancialSummary extends Equatable {
   final double totalDisbursements;
   final double totalExpenses;
   final double availableBalance;
+  final int totalAttendance;
+  final int totalNonAttendance;
 
   const GroupFinancialSummary({
     required this.totalContributions,
@@ -17,10 +19,22 @@ class GroupFinancialSummary extends Equatable {
     required this.totalDisbursements,
     required this.totalExpenses,
     required this.availableBalance,
+    required this.totalAttendance,
+    required this.totalNonAttendance,
   });
 
   @override
-  List<Object?> get props => [totalContributions, totalShares, totalFines, totalRepayments, totalDisbursements, totalExpenses, availableBalance];
+  List<Object?> get props => [
+    totalContributions,
+    totalShares,
+    totalFines,
+    totalRepayments,
+    totalDisbursements,
+    totalExpenses,
+    availableBalance,
+    totalAttendance,
+    totalNonAttendance,
+  ];
 }
 
 class MemberFinancialReport extends Equatable {
@@ -47,5 +61,15 @@ class MemberFinancialReport extends Equatable {
   });
 
   @override
-  List<Object?> get props => [totalContributions, totalShareValue, totalShareQuantity, totalFineOwed, totalFinePaid, fineBalance, totalBorrowed, totalRepaid, outstandingLoanBalance];
+  List<Object?> get props => [
+    totalContributions,
+    totalShareValue,
+    totalShareQuantity,
+    totalFineOwed,
+    totalFinePaid,
+    fineBalance,
+    totalBorrowed,
+    totalRepaid,
+    outstandingLoanBalance,
+  ];
 }

@@ -7,6 +7,7 @@ abstract class GroupsRepository {
   Future<Either<Failure, Group>> getGroupDetails(String groupId);
   Future<Either<Failure, Group>> createGroup({
     required String name,
+    String? registrationNumber,
     String? location,
     String? meetingDay,
     double? weeklyContribution,

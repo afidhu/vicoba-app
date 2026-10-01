@@ -16,6 +16,11 @@ export class UpdateMemberDto {
   phone?: string;
 
   @IsOptional()
+  @Transform(blankToUndefined)
+  @IsString()
+  nidaNumber?: string;
+
+  @IsOptional()
   // @IsEn um(GroupRole)
   role?: string;
 

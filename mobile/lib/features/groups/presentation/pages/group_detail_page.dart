@@ -45,6 +45,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   void _handleBack() {
     context.read<GroupsBloc>().add(LoadGroupsEvent());
   }
+
   @override
   void initState() {
     super.initState();
@@ -66,259 +67,291 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     return PopScope(
       onPopInvokedWithResult: (didPop, result) => _handleBack(),
       child: Scaffold(
-      appBar: AppBar(
-        title: const Text('Group Overview'),
-        actions: [
-          Builder(
-            builder: (context) {
-              final role = context.watch<ActiveGroupCubit>().state.role;
-              if (role != 'OWNER' && role != 'ADMIN') return const SizedBox.shrink();
-              return IconButton(
-                tooltip: 'Upload group file',
-                icon: const Icon(Icons.add),
-                onPressed: () => _openGroupFiles(
-                  context,
-                  widget.groupId,
-                      role!,
-                ),
-              );
-            },
-          ),
-          const Icon(Icons.more_vert),
-        ],
-      ),
-      body: MultiBlocListener(
-        listeners: [
-          BlocListener<GroupsBloc, GroupsState>(
-            listener: (context, state) {
-              if (state is GroupDetailsLoaded) {
-                context.read<ActiveGroupCubit>().setGroup(
-                      groupId: state.group.id,
-                      groupName: state.group.name,
-                    );
-              }
-            },
-          ),
-          BlocListener<MembersBloc, MembersState>(listener: (_, s) => _syncActiveRole(s)),
-        ],
-        child: BlocBuilder<GroupsBloc, GroupsState>(
-        builder: (context, state) {
-          if (state is GroupsLoading) {
-            return const AppLoader(message: 'Loading group details...');
-          } else if (state is GroupsError) {
-            return AppErrorWidget(
-              message: state.message,
-              onRetry: () => context.read<GroupsBloc>().add(LoadGroupDetailsEvent(widget.groupId)),
-            );
-          } else if (state is GroupDetailsLoaded) {
-            final group = state.group;
+        appBar: AppBar(
+          title: const Text('Group Overview'),
+          actions: [
+            Builder(
+              builder: (context) {
+                final role = context.watch<ActiveGroupCubit>().state.role;
+                if (role != 'OWNER' && role != 'ADMIN')
+                  return const SizedBox.shrink();
+                return IconButton(
+                  tooltip: 'Upload group file',
+                  icon: const Icon(Icons.add),
+                  onPressed: () =>
+                      _openGroupFiles(context, widget.groupId, role!),
+                );
+              },
+            ),
+            const Icon(Icons.more_vert),
+          ],
+        ),
+        body: MultiBlocListener(
+          listeners: [
+            BlocListener<GroupsBloc, GroupsState>(
+              listener: (context, state) {
+                if (state is GroupDetailsLoaded) {
+                  context.read<ActiveGroupCubit>().setGroup(
+                    groupId: state.group.id,
+                    groupName: state.group.name,
+                  );
+                }
+              },
+            ),
+            BlocListener<MembersBloc, MembersState>(
+              listener: (_, s) => _syncActiveRole(s),
+            ),
+          ],
+          child: BlocBuilder<GroupsBloc, GroupsState>(
+            builder: (context, state) {
+              if (state is GroupsLoading) {
+                return const AppLoader(message: 'Loading group details...');
+              } else if (state is GroupsError) {
+                return AppErrorWidget(
+                  message: state.message,
+                  onRetry: () => context.read<GroupsBloc>().add(
+                    LoadGroupDetailsEvent(widget.groupId),
+                  ),
+                );
+              } else if (state is GroupDetailsLoaded) {
+                final group = state.group;
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Group Header Card
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Group Header Card
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryLight,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.account_balance_rounded,
-                                  color: AppColors.primary,
-                                  size: 28,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      group.name,
-                                      style: AppTextStyles.headingSmall,
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryLight,
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                    if (group.location != null) ...[
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        group.location!,
-                                        style: AppTextStyles.bodySmall,
+                                    child: const Icon(
+                                      Icons.account_balance_rounded,
+                                      color: AppColors.primary,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          group.name,
+                                          style: AppTextStyles.headingSmall,
+                                        ),
+                                        if (group
+                                                .registrationNumber
+                                                ?.isNotEmpty ==
+                                            true) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Registration no. ${group.registrationNumber}',
+                                            style: AppTextStyles.caption,
+                                          ),
+                                        ],
+                                        if (group.location != null) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            group.location!,
+                                            style: AppTextStyles.bodySmall,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (group.meetingDay != null) ...[
+                                const SizedBox(height: 16),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.event,
+                                      size: 16,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Meeting Day: ${group.meetingDay}',
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: AppColors.textSecondary,
                                       ),
-                                    ],
+                                    ),
                                   ],
                                 ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Financial Rules Card
+                      Text(
+                        'Group Rules & Rates',
+                        style: AppTextStyles.headingSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              _RuleRow(
+                                icon: Icons.payments_outlined,
+                                title: 'Weekly Contribution',
+                                value: CurrencyFormatter.format(
+                                  group.weeklyContribution,
+                                ),
+                              ),
+                              const Divider(),
+                              _RuleRow(
+                                icon: Icons.pie_chart_outline,
+                                title: 'Share Unit Price',
+                                value: CurrencyFormatter.format(
+                                  group.sharePrice,
+                                ),
+                              ),
+                              const Divider(),
+                              _RuleRow(
+                                icon: Icons.gavel_outlined,
+                                title: 'Default Fine Amount',
+                                value: CurrencyFormatter.format(
+                                  group.fineDefaultAmount,
+                                ),
+                              ),
+                              const Divider(),
+                              _RuleRow(
+                                icon: Icons.percent,
+                                title: 'Loan Interest Rate',
+                                value:
+                                    '${group.loanInterestRate.toStringAsFixed(1)}%',
                               ),
                             ],
                           ),
-                          if (group.meetingDay != null) ...[
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                const Icon(Icons.event, size: 16, color: AppColors.textSecondary),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Meeting Day: ${group.meetingDay}',
-                                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
-                  // Financial Rules Card
-                  Text('Group Rules & Rates', style: AppTextStyles.headingSmall),
-                  const SizedBox(height: 8),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
+                      // Feature Access Shortcuts
+                      Text(
+                        'Manage & Activities',
+                        style: AppTextStyles.headingSmall,
+                      ),
+                      const SizedBox(height: 10),
+                      GridView.count(
+                        crossAxisCount: 3,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 1.0,
                         children: [
-                          _RuleRow(
+                          _FeatureTile(
+                            icon: Icons.people_alt_outlined,
+                            label: 'Members',
+                            color: AppColors.primary,
+                            onTap: () => context.pushNamed(
+                              RouteNames.members,
+                              pathParameters: {'groupId': group.id},
+                            ),
+                          ),
+                          _FeatureTile(
                             icon: Icons.payments_outlined,
-                            title: 'Weekly Contribution',
-                            value: CurrencyFormatter.format(group.weeklyContribution),
+                            label: 'Contributions',
+                            color: AppColors.primaryAccent,
+                            onTap: () => context.pushNamed(
+                              RouteNames.contributions,
+                              pathParameters: {'groupId': group.id},
+                            ),
                           ),
-                          const Divider(),
-                          _RuleRow(
+                          _FeatureTile(
                             icon: Icons.pie_chart_outline,
-                            title: 'Share Unit Price',
-                            value: CurrencyFormatter.format(group.sharePrice),
+                            label: 'Shares',
+                            color: AppColors.secondary,
+                            onTap: () => context.pushNamed(
+                              RouteNames.shares,
+                              pathParameters: {'groupId': group.id},
+                            ),
                           ),
-                          const Divider(),
-                          _RuleRow(
+                          _FeatureTile(
+                            icon: Icons.account_balance_wallet_outlined,
+                            label: 'Loans',
+                            color: Colors.indigo,
+                            onTap: () => context.pushNamed(
+                              RouteNames.loans,
+                              pathParameters: {'groupId': group.id},
+                            ),
+                          ),
+                          _FeatureTile(
                             icon: Icons.gavel_outlined,
-                            title: 'Default Fine Amount',
-                            value: CurrencyFormatter.format(group.fineDefaultAmount),
+                            label: 'Fines',
+                            color: Colors.deepOrange,
+                            onTap: () => context.pushNamed(
+                              RouteNames.fines,
+                              pathParameters: {'groupId': group.id},
+                            ),
                           ),
-                          const Divider(),
-                          _RuleRow(
-                            icon: Icons.percent,
-                            title: 'Loan Interest Rate',
-                            value: '${group.loanInterestRate.toStringAsFixed(1)}%',
+                          _FeatureTile(
+                            icon: Icons.receipt_outlined,
+                            label: 'Expenses',
+                            color: Colors.brown,
+                            onTap: () => context.pushNamed(
+                              RouteNames.expenses,
+                              pathParameters: {'groupId': group.id},
+                            ),
+                          ),
+                          _FeatureTile(
+                            icon: Icons.event_note_outlined,
+                            label: 'Meetings',
+                            color: Colors.teal,
+                            onTap: () => context.pushNamed(
+                              RouteNames.meetings,
+                              pathParameters: {'groupId': group.id},
+                            ),
+                          ),
+                          _FeatureTile(
+                            icon: Icons.analytics_outlined,
+                            label: 'Reports',
+                            color: Colors.purple,
+                            onTap: () => context.pushNamed(
+                              RouteNames.reports,
+                              pathParameters: {'groupId': group.id},
+                            ),
+                          ),
+                          _FeatureTile(
+                            icon: Icons.history_edu_outlined,
+                            label: 'Audit Log',
+                            color: Colors.blueGrey,
+                            onTap: () => context.pushNamed(
+                              RouteNames.auditLogs,
+                              pathParameters: {'groupId': group.id},
+                            ),
                           ),
                         ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Feature Access Shortcuts
-                  Text('Manage & Activities', style: AppTextStyles.headingSmall),
-                  const SizedBox(height: 10),
-                  GridView.count(
-                    crossAxisCount: 3,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 1.0,
-                    children: [
-                      _FeatureTile(
-                        icon: Icons.people_alt_outlined,
-                        label: 'Members',
-                        color: AppColors.primary,
-                        onTap: () => context.pushNamed(
-                          RouteNames.members,
-                          pathParameters: {'groupId': group.id},
-                        ),
-                      ),
-                      _FeatureTile(
-                        icon: Icons.payments_outlined,
-                        label: 'Contributions',
-                        color: AppColors.primaryAccent,
-                        onTap: () => context.pushNamed(
-                          RouteNames.contributions,
-                          pathParameters: {'groupId': group.id},
-                        ),
-                      ),
-                      _FeatureTile(
-                        icon: Icons.pie_chart_outline,
-                        label: 'Shares',
-                        color: AppColors.secondary,
-                        onTap: () => context.pushNamed(
-                          RouteNames.shares,
-                          pathParameters: {'groupId': group.id},
-                        ),
-                      ),
-                      _FeatureTile(
-                        icon: Icons.account_balance_wallet_outlined,
-                        label: 'Loans',
-                        color: Colors.indigo,
-                        onTap: () => context.pushNamed(
-                          RouteNames.loans,
-                          pathParameters: {'groupId': group.id},
-                        ),
-                      ),
-                      _FeatureTile(
-                        icon: Icons.gavel_outlined,
-                        label: 'Fines',
-                        color: Colors.deepOrange,
-                        onTap: () => context.pushNamed(
-                          RouteNames.fines,
-                          pathParameters: {'groupId': group.id},
-                        ),
-                      ),
-                      _FeatureTile(
-                        icon: Icons.receipt_outlined,
-                        label: 'Expenses',
-                        color: Colors.brown,
-                        onTap: () => context.pushNamed(
-                          RouteNames.expenses,
-                          pathParameters: {'groupId': group.id},
-                        ),
-                      ),
-                      _FeatureTile(
-                        icon: Icons.event_note_outlined,
-                        label: 'Meetings',
-                        color: Colors.teal,
-                        onTap: () => context.pushNamed(
-                          RouteNames.meetings,
-                          pathParameters: {'groupId': group.id},
-                        ),
-                      ),
-                      _FeatureTile(
-                        icon: Icons.analytics_outlined,
-                        label: 'Reports',
-                        color: Colors.purple,
-                        onTap: () => context.pushNamed(
-                          RouteNames.reports,
-                          pathParameters: {'groupId': group.id},
-                        ),
-                      ),
-                      _FeatureTile(
-                        icon: Icons.history_edu_outlined,
-                        label: 'Audit Log',
-                        color: Colors.blueGrey,
-                        onTap: () => context.pushNamed(
-                          RouteNames.auditLogs,
-                          pathParameters: {'groupId': group.id},
-                        ),
                       ),
                     ],
                   ),
-                ],
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ),
-      ),
       ),
     );
   }
@@ -393,7 +426,10 @@ class _FeatureTile extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 label,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

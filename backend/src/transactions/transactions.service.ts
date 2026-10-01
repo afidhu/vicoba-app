@@ -1,10 +1,36 @@
 import { Injectable } from '@nestjs/common';
 // import { TransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
+import { CreateTransactionDto } from './dto/create-transaction.dto';
 
 @Injectable()
 export class TransactionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private audit: AuditService,
+  ) {}
+
+  async createOther(groupId: string, actorUserId: string, dto: CreateTransactionDto) {
+    const transaction = await this.prisma.transaction.create({
+      data: {
+        groupId,
+        type: 'OTHER',
+        direction: dto.direction,
+        amount: dto.amount,
+        description: dto.description,
+      },
+    });
+    await this.audit.log({
+      userId: actorUserId,
+      action: 'CREATE',
+      entity: 'Transaction',
+      entityId: transaction.id,
+      groupId,
+      metadata: { direction: dto.direction, amount: dto.amount, description: dto.description },
+    });
+    return transaction;
+  }
 
   findAll(
     groupId: string,

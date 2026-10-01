@@ -33,6 +33,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
   @override
   Future<Either<Failure, Group>> createGroup({
     required String name,
+    String? registrationNumber,
     String? location,
     String? meetingDay,
     double? weeklyContribution,
@@ -43,9 +44,13 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       final data = {
         'name': name,
+        if (registrationNumber != null && registrationNumber.isNotEmpty)
+          'registrationNumber': registrationNumber,
         if (location != null && location.isNotEmpty) 'location': location,
-        if (meetingDay != null && meetingDay.isNotEmpty) 'meetingDay': meetingDay,
-        if (weeklyContribution != null) 'weeklyContribution': weeklyContribution,
+        if (meetingDay != null && meetingDay.isNotEmpty)
+          'meetingDay': meetingDay,
+        if (weeklyContribution != null)
+          'weeklyContribution': weeklyContribution,
         if (sharePrice != null) 'sharePrice': sharePrice,
         if (fineDefaultAmount != null) 'fineDefaultAmount': fineDefaultAmount,
         if (loanInterestRate != null) 'loanInterestRate': loanInterestRate,
@@ -73,7 +78,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
         if (name != null) 'name': name,
         if (location != null) 'location': location,
         if (meetingDay != null) 'meetingDay': meetingDay,
-        if (weeklyContribution != null) 'weeklyContribution': weeklyContribution,
+        if (weeklyContribution != null)
+          'weeklyContribution': weeklyContribution,
         if (sharePrice != null) 'sharePrice': sharePrice,
         if (fineDefaultAmount != null) 'fineDefaultAmount': fineDefaultAmount,
         if (loanInterestRate != null) 'loanInterestRate': loanInterestRate,

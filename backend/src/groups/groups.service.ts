@@ -16,6 +16,7 @@ export class GroupsService {
     const group = await this.prisma.group.create({
       data: {
         name: dto.name,
+        registrationNumber: dto.registrationNumber,
         location: dto.location,
         meetingDay: dto.meetingDay,
         weeklyContribution: dto.weeklyContribution ?? 0,

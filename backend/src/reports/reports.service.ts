@@ -112,13 +112,64 @@ export class ReportsService {
     return { totalIn, totalOut, netMovement: totalIn - totalOut, transactions };
   }
 
+  async attendanceReport(groupId: string, range: DateRange) {
+    const records = await this.prisma.meetingAttendance.findMany({
+      where: {
+        meeting: {
+          groupId,
+          ...(range.from || range.to
+            ? {
+                date: {
+                  ...(range.from ? { gte: new Date(range.from) } : {}),
+                  ...(range.to ? { lte: new Date(range.to) } : {}),
+                },
+              }
+            : {}),
+        },
+      },
+      include: {
+        member: { select: { id: true, name: true } },
+        meeting: { select: { id: true, title: true, date: true } },
+      },
+      orderBy: { meeting: { date: 'desc' } },
+    });
+    return {
+      attended: records.filter((record) => record.present).length,
+      nonAttendance: records.filter((record) => !record.present).length,
+      records: records.map((record) => ({
+        meetingId: record.meeting.id,
+        meetingTitle: record.meeting.title,
+        meetingDate: record.meeting.date,
+        memberId: record.member.id,
+        memberName: record.member.name,
+        present: record.present,
+      })),
+    };
+  }
+
   async financialSummary(groupId: string, range: DateRange) {
-    const [contrib, fines, loans, expenses, transactions] = await Promise.all([
+    const [contrib, fines, loans, expenses, transactions, attendance] = await Promise.all([
       this.contributionsReport(groupId, range),
       this.finesReport(groupId, range),
       this.loansReport(groupId, range),
       this.expensesReport(groupId, range),
       this.transactionsReport(groupId, range),
+      this.prisma.meetingAttendance.findMany({
+        where: {
+          meeting: {
+            groupId,
+            ...(range.from || range.to
+              ? {
+                  date: {
+                    ...(range.from ? { gte: new Date(range.from) } : {}),
+                    ...(range.to ? { lte: new Date(range.to) } : {}),
+                  },
+                }
+              : {}),
+          },
+        },
+        select: { present: true },
+      }),
     ]);
     return {
       contributions: { total: contrib.total, count: contrib.count },
@@ -129,6 +180,10 @@ export class ReportsService {
         count: loans.count,
       },
       expenses: { total: expenses.total, count: expenses.count },
+      attendance: {
+        attended: attendance.filter((record) => record.present).length,
+        nonAttendance: attendance.filter((record) => !record.present).length,
+      },
       cashFlow: {
         totalIn: transactions.totalIn,
         totalOut: transactions.totalOut,

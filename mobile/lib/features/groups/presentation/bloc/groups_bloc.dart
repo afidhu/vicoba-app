@@ -34,27 +34,26 @@ class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
   ) async {
     emit(GroupsLoading());
     final result = await getGroupsUseCase();
-    await result.fold(
-      (failure) async => emit(GroupsError(failure.message)),
-      (groups) async {
-        _cachedGroups = groups;
-        final savedGroupId = await storageService.getActiveGroupId();
-        if (savedGroupId != null) {
-          try {
-            _activeGroup = groups.firstWhere((g) => g.id == savedGroupId);
-          } catch (_) {
-            _activeGroup = groups.isNotEmpty ? groups.first : null;
-          }
-        } else if (groups.isNotEmpty) {
-          _activeGroup = groups.first;
-          await storageService.saveActiveGroupId(_activeGroup!.id);
-          await storageService.saveActiveGroupName(_activeGroup!.name);
-        } else {
-          _activeGroup = null;
+    await result.fold((failure) async => emit(GroupsError(failure.message)), (
+      groups,
+    ) async {
+      _cachedGroups = groups;
+      final savedGroupId = await storageService.getActiveGroupId();
+      if (savedGroupId != null) {
+        try {
+          _activeGroup = groups.firstWhere((g) => g.id == savedGroupId);
+        } catch (_) {
+          _activeGroup = groups.isNotEmpty ? groups.first : null;
         }
-        emit(GroupsLoaded(groups: _cachedGroups, activeGroup: _activeGroup));
-      },
-    );
+      } else if (groups.isNotEmpty) {
+        _activeGroup = groups.first;
+        await storageService.saveActiveGroupId(_activeGroup!.id);
+        await storageService.saveActiveGroupName(_activeGroup!.name);
+      } else {
+        _activeGroup = null;
+      }
+      emit(GroupsLoaded(groups: _cachedGroups, activeGroup: _activeGroup));
+    });
   }
 
   Future<void> _onLoadGroupDetails(
@@ -76,6 +75,7 @@ class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
     emit(GroupsLoading());
     final result = await createGroupUseCase(
       name: event.name,
+      registrationNumber: event.registrationNumber,
       location: event.location,
       meetingDay: event.meetingDay,
       weeklyContribution: event.weeklyContribution,
@@ -83,16 +83,18 @@ class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
       fineDefaultAmount: event.fineDefaultAmount,
       loanInterestRate: event.loanInterestRate,
     );
-    result.fold(
-      (failure) => emit(GroupsError(failure.message)),
-      (group) {
-        _activeGroup = group;
-        storageService.saveActiveGroupId(group.id);
-        storageService.saveActiveGroupName(group.name);
-        emit(GroupOperationSuccess('Group created successfully', createdGroup: group));
-        add(LoadGroupsEvent());
-      },
-    );
+    result.fold((failure) => emit(GroupsError(failure.message)), (group) {
+      _activeGroup = group;
+      storageService.saveActiveGroupId(group.id);
+      storageService.saveActiveGroupName(group.name);
+      emit(
+        GroupOperationSuccess(
+          'Group created successfully',
+          createdGroup: group,
+        ),
+      );
+      add(LoadGroupsEvent());
+    });
   }
 
   Future<void> _onSelectActiveGroup(

@@ -8,6 +8,7 @@ class MemberModel extends Member {
     super.role = 'MEMBER',
     required super.name,
     super.phone,
+    super.nidaNumber,
     super.shareHoldings = 0,
     required super.joinedAt,
     super.isActive = true,
@@ -21,8 +22,13 @@ class MemberModel extends Member {
       role: json['role'] ?? 'MEMBER',
       name: json['name'] ?? '',
       phone: json['phone'],
-      shareHoldings: (json['shareHoldings'] is num) ? (json['shareHoldings'] as num).toInt() : 0,
-      joinedAt: json['joinedAt'] != null ? DateTime.parse(json['joinedAt']) : DateTime.now(),
+      nidaNumber: json['nidaNumber'],
+      shareHoldings: (json['shareHoldings'] is num)
+          ? (json['shareHoldings'] as num).toInt()
+          : 0,
+      joinedAt: json['joinedAt'] != null
+          ? DateTime.parse(json['joinedAt'])
+          : DateTime.now(),
       isActive: json['isActive'] ?? true,
     );
   }
@@ -35,6 +41,7 @@ class MemberModel extends Member {
       'role': role,
       'name': name,
       if (phone != null) 'phone': phone,
+      if (nidaNumber != null) 'nidaNumber': nidaNumber,
       'shareHoldings': shareHoldings,
       'joinedAt': joinedAt.toIso8601String(),
       'isActive': isActive,

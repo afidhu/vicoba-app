@@ -30,6 +30,7 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _nidaNumberController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -41,6 +42,7 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _nidaNumberController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -49,7 +51,8 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
 
   void _onSave() {
     if (_formKey.currentState?.validate() ?? false) {
-      if (_createLogin && _passwordController.text != _confirmPasswordController.text) {
+      if (_createLogin &&
+          _passwordController.text != _confirmPasswordController.text) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Passwords do not match'),
@@ -63,7 +66,12 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
         AddMemberEvent(
           groupId: widget.groupId,
           name: _nameController.text.trim(),
-          phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+          phone: _phoneController.text.trim().isEmpty
+              ? null
+              : _phoneController.text.trim(),
+          nidaNumber: _nidaNumberController.text.trim().isEmpty
+              ? null
+              : _nidaNumberController.text.trim(),
           role: _selectedRole,
           email: _createLogin ? _emailController.text.trim() : null,
           password: _createLogin ? _passwordController.text : null,
@@ -84,8 +92,13 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
         final isLoading = state is MembersLoading;
 
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Register Member', style: AppTextStyles.headingMedium),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Register Member',
+            style: AppTextStyles.headingMedium,
+          ),
           content: SingleChildScrollView(
             child: Form(
               key: _formKey,
@@ -103,7 +116,8 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
                     labelText: 'Member Full Name *',
                     hintText: 'e.g. Maria Joseph',
                     prefixIcon: Icons.person_outline,
-                    validator: (val) => Validators.required(val, 'Name is required'),
+                    validator: (val) =>
+                        Validators.required(val, 'Name is required'),
                     enabled: !isLoading,
                   ),
                   const SizedBox(height: 14),
@@ -117,17 +131,35 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
                     enabled: !isLoading,
                   ),
                   const SizedBox(height: 14),
+                  AppTextField(
+                    controller: _nidaNumberController,
+                    labelText: 'NIDA Number',
+                    prefixIcon: Icons.badge_outlined,
+                    enabled: !isLoading,
+                  ),
+                  const SizedBox(height: 14),
                   AppDropdown<String>(
                     value: _selectedRole,
                     labelText: 'Group Role',
                     prefixIcon: Icons.badge_outlined,
                     enabled: !isLoading,
                     items: const [
-                      DropdownMenuItem(value: AppConstants.roleMember, child: Text('Member')),
                       DropdownMenuItem(
-                          value: AppConstants.roleAdmin, child: Text('Chairperson / Admin')),
-                      DropdownMenuItem(value: AppConstants.roleTreasurer, child: Text('Treasurer')),
-                      DropdownMenuItem(value: AppConstants.roleSecretary, child: Text('Secretary')),
+                        value: AppConstants.roleMember,
+                        child: Text('Member'),
+                      ),
+                      DropdownMenuItem(
+                        value: AppConstants.roleAdmin,
+                        child: Text('Chairperson / Admin'),
+                      ),
+                      DropdownMenuItem(
+                        value: AppConstants.roleTreasurer,
+                        child: Text('Treasurer'),
+                      ),
+                      DropdownMenuItem(
+                        value: AppConstants.roleSecretary,
+                        child: Text('Secretary'),
+                      ),
                     ],
                     onChanged: (val) {
                       if (val != null) {
@@ -138,14 +170,18 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
                   const SizedBox(height: 8),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title:
-                        const Text('Create a login for this member', style: AppTextStyles.bodyMedium),
+                    title: const Text(
+                      'Create a login for this member',
+                      style: AppTextStyles.bodyMedium,
+                    ),
                     subtitle: const Text(
                       'Lets them sign in to the app with an email and password.',
                       style: AppTextStyles.caption,
                     ),
                     value: _createLogin,
-                    onChanged: isLoading ? null : (val) => setState(() => _createLogin = val),
+                    onChanged: isLoading
+                        ? null
+                        : (val) => setState(() => _createLogin = val),
                   ),
                   if (_createLogin) ...[
                     const SizedBox(height: 8),
@@ -155,7 +191,8 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
                       hintText: 'member@example.com',
                       prefixIcon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
-                      validator: (val) => _createLogin ? Validators.email(val) : null,
+                      validator: (val) =>
+                          _createLogin ? Validators.email(val) : null,
                       enabled: !isLoading,
                     ),
                     const SizedBox(height: 14),
@@ -165,14 +202,19 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
                       hintText: 'At least 6 characters',
                       prefixIcon: Icons.lock_outline_rounded,
                       obscureText: _obscurePassword,
-                      validator: (val) => _createLogin ? Validators.password(val, 6) : null,
+                      validator: (val) =>
+                          _createLogin ? Validators.password(val, 6) : null,
                       enabled: !isLoading,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
                           size: 20,
                         ),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -182,8 +224,9 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
                       hintText: 'Re-enter password',
                       prefixIcon: Icons.lock_outline_rounded,
                       obscureText: _obscurePassword,
-                      validator: (val) =>
-                          _createLogin ? Validators.required(val, 'Confirm your password') : null,
+                      validator: (val) => _createLogin
+                          ? Validators.required(val, 'Confirm your password')
+                          : null,
                       enabled: !isLoading,
                     ),
                   ],
@@ -207,8 +250,13 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: isLoading
                   ? const SizedBox(

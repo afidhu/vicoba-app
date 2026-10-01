@@ -4,11 +4,15 @@ import '../entities/member.dart';
 
 abstract class MembersRepository {
   Future<Either<Failure, List<Member>>> getMembers(String groupId);
-  Future<Either<Failure, Member>> getMemberDetails(String groupId, String memberId);
+  Future<Either<Failure, Member>> getMemberDetails(
+    String groupId,
+    String memberId,
+  );
   Future<Either<Failure, Member>> addMember({
     required String groupId,
     required String name,
     String? phone,
+    String? nidaNumber,
     String? role,
     String? userId,
     String? email,

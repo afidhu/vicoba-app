@@ -106,12 +106,21 @@ export const meetingsApi = {
   list: (groupId: string) => apiClient.get<Meeting[]>(`/groups/${groupId}/meetings`),
   create: (groupId: string, data: { date: string; notes?: string }) =>
     apiClient.post(`/groups/${groupId}/meetings`, data),
+  get: (groupId: string, meetingId: string) =>
+    apiClient.get<Meeting>(`/groups/${groupId}/meetings/${meetingId}`),
+  recordAttendance: (
+    groupId: string,
+    meetingId: string,
+    items: { memberId: string; present: boolean }[],
+  ) => apiClient.post<Meeting>(`/groups/${groupId}/meetings/${meetingId}/attendance`, { items }),
 };
 
 // ---- Transactions ----
 export const transactionsApi = {
   list: (groupId: string, params?: Record<string, string>) =>
     apiClient.get<Transaction[]>(`/groups/${groupId}/transactions`, { params }),
+  createOther: (groupId: string, data: { direction: 'IN' | 'OUT'; amount: number; description: string }) =>
+    apiClient.post<Transaction>(`/groups/${groupId}/transactions`, data),
   auditLog: (groupId: string) => apiClient.get(`/groups/${groupId}/transactions/audit-log`),
 };
 
@@ -133,4 +142,6 @@ export const reportsApi = {
     apiClient.get(`/groups/${groupId}/reports/loans`, { params }),
   expenses: (groupId: string, params?: Record<string, string>) =>
     apiClient.get(`/groups/${groupId}/reports/expenses`, { params }),
+  attendance: (groupId: string, params?: Record<string, string>) =>
+    apiClient.get(`/groups/${groupId}/reports/attendance`, { params }),
 };

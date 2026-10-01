@@ -21,6 +21,8 @@ class GroupFinancialSummaryModel extends GroupFinancialSummary {
     required super.totalDisbursements,
     required super.totalExpenses,
     required super.availableBalance,
+    required super.totalAttendance,
+    required super.totalNonAttendance,
   });
 
   /// Maps the backend `/reports/summary` shape:
@@ -33,6 +35,7 @@ class GroupFinancialSummaryModel extends GroupFinancialSummary {
     final loans = (json['loans'] as Map?) ?? {};
     final expenses = (json['expenses'] as Map?) ?? {};
     final cashFlow = (json['cashFlow'] as Map?) ?? {};
+    final attendance = (json['attendance'] as Map?) ?? {};
 
     final totalIn = _d(cashFlow['totalIn']);
     final contributionTotal = _d(contributions['total']);
@@ -42,11 +45,14 @@ class GroupFinancialSummaryModel extends GroupFinancialSummary {
       totalContributions: contributionTotal,
       totalShares: _d(json['shares']?['totalShareCapital']),
       totalFines: finePaid,
-      totalRepayments:
-          (totalIn - contributionTotal - finePaid).clamp(0, double.infinity).toDouble(),
+      totalRepayments: (totalIn - contributionTotal - finePaid)
+          .clamp(0, double.infinity)
+          .toDouble(),
       totalDisbursements: _d(loans['totalDisbursed']),
       totalExpenses: _d(expenses['total']),
       availableBalance: _d(cashFlow['netMovement']),
+      totalAttendance: _i(attendance['attended']),
+      totalNonAttendance: _i(attendance['nonAttendance']),
     );
   }
 }

@@ -1,0 +1,228 @@
+.print-report {
+  display: none;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body,
+  #root {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  #root > .d-flex {
+    display: block !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  #root > .d-flex > .d-flex.flex-column,
+  #root .navbar,
+  .reports-screen {
+    display: none !important;
+  }
+
+  #root > .d-flex > .flex-grow-1 {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  #root main {
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  .print-report {
+    display: block !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    width: 210mm !important;
+    max-width: 210mm !important;
+    margin: 0 !important;
+    padding: 13mm 14mm 15mm !important;
+    color: #17211d !important;
+    background: #fff !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 9.5pt !important;
+    line-height: 1.4 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-report-header {
+    margin-bottom: 6mm;
+    padding-bottom: 5mm;
+    border-bottom: 2px solid #315d4b;
+  }
+
+  .print-report-brand {
+    margin-bottom: 2mm;
+    color: #315d4b;
+    font-size: 10pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .print-report h1 {
+    margin: 0 0 5mm;
+    color: #17211d;
+    font-size: 20pt;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .print-report-meta {
+    display: grid;
+    grid-template-columns: 1fr 1.35fr 0.8fr;
+    gap: 4mm;
+  }
+
+  .print-report-meta > div {
+    min-width: 0;
+  }
+
+  .print-report-meta span,
+  .print-report-meta strong {
+    display: block;
+  }
+
+  .print-report-meta span {
+    margin-bottom: 1mm;
+    color: #53615a;
+    font-size: 8pt;
+    text-transform: uppercase;
+  }
+
+  .print-report-meta strong {
+    overflow-wrap: anywhere;
+    font-size: 9.5pt;
+  }
+
+  .print-report-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4mm;
+    margin-bottom: 6mm;
+  }
+
+  .print-report-section {
+    min-width: 0;
+    padding: 4mm;
+    border: 1px solid #c9d2cd;
+    border-radius: 2mm;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-report-section h2 {
+    margin: 0 0 3mm;
+    padding-bottom: 2mm;
+    border-bottom: 1px solid #dce3df;
+    color: #315d4b;
+    font-size: 11pt;
+    font-weight: 700;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .print-report-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 4mm;
+    margin: 1.5mm 0;
+  }
+
+  .print-report-line strong {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .print-report-line.print-report-total {
+    margin-top: 2.5mm;
+    padding-top: 2mm;
+    border-top: 1px solid #c9d2cd;
+    font-weight: 700;
+  }
+
+  .print-report-section p {
+    margin: 2mm 0 0;
+    color: #53615a;
+    font-size: 8pt;
+  }
+
+  .print-attendance-details {
+    margin-top: 2mm;
+    padding: 0;
+    border: 0;
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  .print-attendance-details h2 {
+    margin-bottom: 2mm;
+  }
+
+  .print-attendance-details table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+  }
+
+  .print-attendance-details thead {
+    display: table-header-group;
+  }
+
+  .print-attendance-details th,
+  .print-attendance-details td {
+    padding: 2mm 1.5mm;
+    border: 1px solid #c9d2cd;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .print-attendance-details th {
+    background: #edf2ef !important;
+    color: #17211d !important;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+  }
+
+  .print-attendance-details th:nth-child(1) { width: 20%; }
+  .print-attendance-details th:nth-child(2) { width: 25%; }
+  .print-attendance-details th:nth-child(3) { width: 30%; }
+  .print-attendance-details th:nth-child(4) { width: 25%; }
+
+  .print-attendance-details tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-report-footer {
+    margin-top: 7mm;
+    padding-top: 2mm;
+    border-top: 1px solid #c9d2cd;
+    color: #53615a;
+    font-size: 8pt;
+    text-align: center;
+  }
+}

@@ -69,8 +69,10 @@ class _MeetingsPageState extends State<MeetingsPage> {
           return const Center(child: Text('No meetings found.'));
         },
       ),
-      floatingActionButton: Permissions.canManageMeetings(
-              context.watch<ActiveGroupCubit>().state.role)
+      floatingActionButton:
+          Permissions.canManageMeetings(
+            context.watch<ActiveGroupCubit>().state.role,
+          )
           ? FloatingActionButton(
               onPressed: () => _showCreateMeetingDialog(context),
               child: const Icon(Icons.add),
@@ -164,7 +166,9 @@ class _MeetingsPageState extends State<MeetingsPage> {
     // In a real app, this would be a separate page or a more complex dialog
     // For now, we'll fetch the meeting details (which includes attendance)
     // and show a simplified attendance recording UI.
-    context.read<MeetingsBloc>().add(LoadMeetingDetails(widget.groupId, meetingId));
+    context.read<MeetingsBloc>().add(
+      LoadMeetingDetails(widget.groupId, meetingId),
+    );
 
     showModalBottomSheet(
       context: context,
@@ -216,31 +220,37 @@ class _MeetingsPageState extends State<MeetingsPage> {
                                         items: const [
                                           DropdownMenuItem(
                                             value: 'PRESENT',
-                                            child: Text('Present'),
+                                            child: Text('Attendance'),
                                           ),
                                           DropdownMenuItem(
                                             value: 'ABSENT',
-                                            child: Text('Absent'),
+                                            child: Text('Non-attendance'),
                                           ),
                                         ],
                                         onChanged: !canManage
                                             ? null
                                             : (val) {
-                                          if (val != null) {
-                                            context.read<MeetingsBloc>().add(
-                                              RecordAttendance(
-                                                meetingId: meetingId,
-                                                groupId: widget.groupId,
-                                                attendance: [
-                                                  {
-                                                    'memberId': member.id,
-                                                    'present': val == 'PRESENT',
-                                                  },
-                                                ],
-                                              ),
-                                            );
-                                          }
-                                        },
+                                                if (val != null) {
+                                                  context
+                                                      .read<MeetingsBloc>()
+                                                      .add(
+                                                        RecordAttendance(
+                                                          meetingId: meetingId,
+                                                          groupId:
+                                                              widget.groupId,
+                                                          attendance: [
+                                                            {
+                                                              'memberId':
+                                                                  member.id,
+                                                              'present':
+                                                                  val ==
+                                                                  'PRESENT',
+                                                            },
+                                                          ],
+                                                        ),
+                                                      );
+                                                }
+                                              },
                                       ),
                                     );
                                   },

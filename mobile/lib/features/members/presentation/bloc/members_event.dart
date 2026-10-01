@@ -30,6 +30,7 @@ class AddMemberEvent extends MembersEvent {
   final String groupId;
   final String name;
   final String? phone;
+  final String? nidaNumber;
   final String role;
   final String? userId;
   final String? email;
@@ -39,6 +40,7 @@ class AddMemberEvent extends MembersEvent {
     required this.groupId,
     required this.name,
     this.phone,
+    this.nidaNumber,
     this.role = 'MEMBER',
     this.userId,
     this.email,
@@ -46,7 +48,16 @@ class AddMemberEvent extends MembersEvent {
   });
 
   @override
-  List<Object?> get props => [groupId, name, phone, role, userId, email, password];
+  List<Object?> get props => [
+    groupId,
+    name,
+    phone,
+    nidaNumber,
+    role,
+    userId,
+    email,
+    password,
+  ];
 }
 
 class UpdateMemberEvent extends MembersEvent {

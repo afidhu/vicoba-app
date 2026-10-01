@@ -7,7 +7,8 @@ export type TransactionType =
   | 'FINE'
   | 'LOAN_DISBURSEMENT'
   | 'LOAN_REPAYMENT'
-  | 'EXPENSE';
+  | 'EXPENSE'
+  | 'OTHER';
 export type TransactionDirection = 'IN' | 'OUT';
 
 export interface AuthUser {
@@ -20,6 +21,7 @@ export interface AuthUser {
 export interface Group {
   id: string;
   name: string;
+  registrationNumber?: string | null;
   location?: string | null;
   meetingDay?: string | null;
   weeklyContribution: string | number;
@@ -37,6 +39,7 @@ export interface GroupMember {
   userId?: string | null;
   name: string;
   phone?: string | null;
+  nidaNumber?: string | null;
   role: GroupRole;
   shareHoldings: number;
   isActive: boolean;
@@ -128,7 +131,18 @@ export interface Meeting {
   id: string;
   groupId: string;
   date: string;
+  title?: string | null;
+  location?: string | null;
   notes?: string | null;
+  attendances?: MeetingAttendance[];
+}
+
+export interface MeetingAttendance {
+  id: string;
+  meetingId: string;
+  memberId: string;
+  present: boolean;
+  member?: { id: string; name: string };
 }
 
 export interface Transaction {

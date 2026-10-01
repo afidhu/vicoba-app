@@ -41,7 +41,9 @@ class GroupCard extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: isActive ? AppColors.primary : AppColors.primaryLight,
+                      color: isActive
+                          ? AppColors.primary
+                          : AppColors.primaryLight,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -61,11 +63,25 @@ class GroupCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (group.location != null && group.location!.isNotEmpty) ...[
+                        if (group.registrationNumber?.isNotEmpty == true) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            'Registration no. ${group.registrationNumber}',
+                            style: AppTextStyles.caption,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                        if (group.location != null &&
+                            group.location!.isNotEmpty) ...[
                           const SizedBox(height: 2),
                           Row(
                             children: [
-                              const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textMuted),
+                              const Icon(
+                                Icons.location_on_outlined,
+                                size: 14,
+                                color: AppColors.textMuted,
+                              ),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
@@ -83,7 +99,10 @@ class GroupCard extends StatelessWidget {
                   ),
                   if (isActive)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.successLight,
                         borderRadius: BorderRadius.circular(6),

@@ -59,6 +59,15 @@ export class ReportsController {
     return this.reportsService.transactionsReport(groupId, { from, to });
   }
 
+  @Get('attendance')
+  attendance(
+    @Param('groupId') groupId: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportsService.attendanceReport(groupId, { from, to });
+  }
+
   @Get('summary')
   summary(
     @Param('groupId') groupId: string,

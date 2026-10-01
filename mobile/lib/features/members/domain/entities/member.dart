@@ -7,6 +7,7 @@ class Member extends Equatable {
   final String role;
   final String name;
   final String? phone;
+  final String? nidaNumber;
   final int shareHoldings;
   final DateTime joinedAt;
   final bool isActive;
@@ -18,6 +19,7 @@ class Member extends Equatable {
     this.role = 'MEMBER',
     required this.name,
     this.phone,
+    this.nidaNumber,
     this.shareHoldings = 0,
     required this.joinedAt,
     this.isActive = true,
@@ -25,14 +27,15 @@ class Member extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        groupId,
-        userId,
-        role,
-        name,
-        phone,
-        shareHoldings,
-        joinedAt,
-        isActive,
-      ];
+    id,
+    groupId,
+    userId,
+    role,
+    name,
+    phone,
+    nidaNumber,
+    shareHoldings,
+    joinedAt,
+    isActive,
+  ];
 }

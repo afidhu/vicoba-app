@@ -5,6 +5,7 @@ class Transaction extends Equatable {
   final String groupId;
   final String? memberId;
   final String type;
+  final String? direction;
   final double amount;
   final String? description;
   final String? referenceId;
@@ -17,6 +18,7 @@ class Transaction extends Equatable {
     required this.groupId,
     this.memberId,
     required this.type,
+    this.direction,
     required this.amount,
     this.description,
     this.referenceId,
@@ -26,5 +28,17 @@ class Transaction extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, groupId, memberId, type, amount, description, referenceId, transactionDate, createdBy, memberName];
+  List<Object?> get props => [
+    id,
+    groupId,
+    memberId,
+    type,
+    direction,
+    amount,
+    description,
+    referenceId,
+    transactionDate,
+    createdBy,
+    memberName,
+  ];
 }

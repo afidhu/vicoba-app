@@ -57,18 +57,21 @@ class MembersBloc extends Bloc<MembersEvent, MembersState> {
       groupId: event.groupId,
       name: event.name,
       phone: event.phone,
+      nidaNumber: event.nidaNumber,
       role: event.role,
       userId: event.userId,
       email: event.email,
       password: event.password,
     );
-    result.fold(
-      (failure) => emit(MembersError(failure.message)),
-      (member) {
-        emit(MemberOperationSuccess('Member registered successfully', member: member));
-        add(LoadMembersEvent(event.groupId));
-      },
-    );
+    result.fold((failure) => emit(MembersError(failure.message)), (member) {
+      emit(
+        MemberOperationSuccess(
+          'Member registered successfully',
+          member: member,
+        ),
+      );
+      add(LoadMembersEvent(event.groupId));
+    });
   }
 
   Future<void> _onUpdateMember(
@@ -85,12 +88,11 @@ class MembersBloc extends Bloc<MembersEvent, MembersState> {
       role: event.role,
       isActive: event.isActive,
     );
-    result.fold(
-      (failure) => emit(MembersError(failure.message)),
-      (member) {
-        emit(MemberOperationSuccess('Member updated successfully', member: member));
-        add(LoadMembersEvent(event.groupId));
-      },
-    );
+    result.fold((failure) => emit(MembersError(failure.message)), (member) {
+      emit(
+        MemberOperationSuccess('Member updated successfully', member: member),
+      );
+      add(LoadMembersEvent(event.groupId));
+    });
   }
 }

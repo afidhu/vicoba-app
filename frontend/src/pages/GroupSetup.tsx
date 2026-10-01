@@ -14,6 +14,7 @@ export default function GroupSetup() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     name: '',
+    registrationNumber: '',
     location: '',
     meetingDay: 'Saturday',
     weeklyContribution: 5000,
@@ -66,7 +67,10 @@ export default function GroupSetup() {
                   >
                     <div>
                       <div className="fw-semibold">{g.name}</div>
-                      <small className="text-muted">{g.location || 'No location set'}</small>
+                      <small className="text-muted">
+                        {g.registrationNumber ? `Registration no. ${g.registrationNumber} · ` : ''}
+                        {g.location || 'No location set'}
+                      </small>
                     </div>
                     <span className="badge bg-success-subtle text-success-emphasis">
                       {g._count?.members ?? 0} members
@@ -103,6 +107,14 @@ export default function GroupSetup() {
                       required
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Registration number</label>
+                    <input
+                      className="form-control"
+                      value={form.registrationNumber}
+                      onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })}
                     />
                   </div>
                   <div className="col-md-6">

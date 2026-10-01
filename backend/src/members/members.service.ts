@@ -60,6 +60,7 @@ export class MembersService {
         groupId,
         name: dto.name,
         phone: dto.phone,
+        nidaNumber: dto.nidaNumber,
         role: dto.role as any,
         userId,
       },

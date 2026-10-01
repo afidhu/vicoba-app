@@ -19,6 +19,7 @@ class CreateGroupPage extends StatefulWidget {
 class _CreateGroupPageState extends State<CreateGroupPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _registrationNumberController = TextEditingController();
   final _locationController = TextEditingController();
   final _meetingDayController = TextEditingController(text: 'Sunday');
   final _weeklyContributionController = TextEditingController(text: '5000');
@@ -29,6 +30,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   @override
   void dispose() {
     _nameController.dispose();
+    _registrationNumberController.dispose();
     _locationController.dispose();
     _meetingDayController.dispose();
     _weeklyContributionController.dispose();
@@ -43,12 +45,25 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       context.read<GroupsBloc>().add(
         CreateGroupEvent(
           name: _nameController.text.trim(),
-          location: _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
-          meetingDay: _meetingDayController.text.trim().isEmpty ? null : _meetingDayController.text.trim(),
-          weeklyContribution: double.tryParse(_weeklyContributionController.text.trim()),
+          registrationNumber: _registrationNumberController.text.trim().isEmpty
+              ? null
+              : _registrationNumberController.text.trim(),
+          location: _locationController.text.trim().isEmpty
+              ? null
+              : _locationController.text.trim(),
+          meetingDay: _meetingDayController.text.trim().isEmpty
+              ? null
+              : _meetingDayController.text.trim(),
+          weeklyContribution: double.tryParse(
+            _weeklyContributionController.text.trim(),
+          ),
           sharePrice: double.tryParse(_sharePriceController.text.trim()),
-          fineDefaultAmount: double.tryParse(_fineDefaultAmountController.text.trim()),
-          loanInterestRate: double.tryParse(_loanInterestRateController.text.trim()),
+          fineDefaultAmount: double.tryParse(
+            _fineDefaultAmountController.text.trim(),
+          ),
+          loanInterestRate: double.tryParse(
+            _loanInterestRateController.text.trim(),
+          ),
         ),
       );
     }
@@ -57,9 +72,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create New Group'),
-      ),
+      appBar: AppBar(title: const Text('Create New Group')),
       body: BlocListener<GroupsBloc, GroupsState>(
         listener: (context, state) {
           if (state is GroupOperationSuccess) {
@@ -80,17 +93,22 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'Group Information',
-                  style: AppTextStyles.headingSmall,
-                ),
+                Text('Group Information', style: AppTextStyles.headingSmall),
                 const SizedBox(height: 16),
                 AppTextField(
                   controller: _nameController,
                   labelText: 'Group Name *',
                   hintText: 'e.g. Upendo VICOBA Group',
                   prefixIcon: Icons.group_work_outlined,
-                  validator: (val) => Validators.required(val, 'Group name is required'),
+                  validator: (val) =>
+                      Validators.required(val, 'Group name is required'),
+                ),
+                const SizedBox(height: 16),
+                AppTextField(
+                  controller: _registrationNumberController,
+                  labelText: 'Registration Number',
+                  hintText: 'Optional group registration number',
+                  prefixIcon: Icons.badge_outlined,
                 ),
                 const SizedBox(height: 16),
                 AppTextField(
@@ -176,7 +194,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : const Text('Create VICOBA Group'),

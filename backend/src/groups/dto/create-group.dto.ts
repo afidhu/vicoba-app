@@ -6,6 +6,10 @@ export class CreateGroupDto {
 
   @IsOptional()
   @IsString()
+  registrationNumber?: string;
+
+  @IsOptional()
+  @IsString()
   location?: string;
 
   @IsOptional()

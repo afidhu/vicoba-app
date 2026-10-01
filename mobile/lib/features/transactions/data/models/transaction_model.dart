@@ -6,6 +6,7 @@ class TransactionModel extends Transaction {
     required super.groupId,
     super.memberId,
     required super.type,
+    super.direction,
     required super.amount,
     super.description,
     super.referenceId,
@@ -21,13 +22,16 @@ class TransactionModel extends Transaction {
       groupId: json['groupId'] ?? '',
       memberId: json['memberId'],
       type: json['type'] ?? '',
+      direction: json['direction'],
       amount: (amountVal is num)
           ? amountVal.toDouble()
           : (double.tryParse(amountVal?.toString() ?? '0') ?? 0.0),
       description: json['description'],
       referenceId: json['refId'] ?? json['referenceId'],
-      transactionDate: DateTime.tryParse(
-              (json['createdAt'] ?? json['transactionDate'] ?? '').toString()) ??
+      transactionDate:
+          DateTime.tryParse(
+            (json['createdAt'] ?? json['transactionDate'] ?? '').toString(),
+          ) ??
           DateTime.now(),
       createdBy: json['createdBy'] ?? '',
       memberName: json['member']?['name'],
