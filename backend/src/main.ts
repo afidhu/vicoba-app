@@ -41,8 +41,12 @@ async function bootstrap() {
   }
 }
 
-// Automatically execute the startup initialization context
-bootstrap();
+// Start once and cache the promise so every request waits for Nest to be ready
+// (on Vercel cold starts requests could otherwise hit an uninitialised app).
+const ready = bootstrap();
 
-// Export the compiled express runner wrapper for Vercel's Node environment
-export default server;
+// Vercel serverless handler
+export default async function handler(req: any, res: any) {
+  await ready;
+  return server(req, res);
+}

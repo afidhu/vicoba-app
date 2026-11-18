@@ -18,6 +18,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
+    if (status >= 500) {
+      // Make the real cause visible in Vercel function logs
+      console.error('Unhandled exception:', exception);
+    }
+
     const message =
       exception instanceof HttpException
         ? exception.getResponse()
